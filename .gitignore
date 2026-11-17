@@ -1,0 +1,13 @@
+node_modules/
+dist/
+coverage/
+.vite/
+*.local
+.env*
+
+# Third-party assets live in the private null-signal-assets repo (see DESIGN.md §11)
+assets-src/
+public/assets/
+*.fbx
+*.blend
+*.blend1
