@@ -27,7 +27,8 @@ export class Grid {
 
   /**
    * Builds a grid from ASCII rows (north row first). Handy for tests and debug levels:
-   * `.` floor, `#` wall, `=` low wall, `~` crawlspace, `v` vent.
+   * `.` floor, `#` wall, `=` low wall, `~` crawlspace, `v` vent,
+   * `D` door, `d` open door, `e` electrified floor.
    */
   static fromRows(rows: readonly string[], rules: Readonly<Record<Tile, BlockMask>> = TILE_BLOCKS): Grid {
     const depth = rows.length;
@@ -70,4 +71,7 @@ const ASCII: Readonly<Record<string, Tile>> = {
   '=': 'lowWall',
   '~': 'crawlspace',
   v: 'vent',
+  D: 'door',
+  d: 'doorOpen',
+  e: 'electrified',
 };

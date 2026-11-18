@@ -10,4 +10,7 @@ export const TEST_RULES: Readonly<Record<Tile, BlockMask>> = {
   lowWall: Block.Stand | Block.Crouch | Block.Crawl,
   crawlspace: Block.Stand | Block.Crouch,
   vent: Block.Stand | Block.Crouch | Block.Sight | Block.Bullet,
+  door: BLOCK_ALL,
+  doorOpen: 0,
+  electrified: 0,
 };

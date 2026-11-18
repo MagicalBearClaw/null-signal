@@ -3,7 +3,28 @@
  * bullets) lives here; what it *looks like* belongs to the render theme (DESIGN.md §5).
  */
 
-export type Tile = 'floor' | 'wall' | 'lowWall' | 'crawlspace' | 'vent';
+export type Tile =
+  | 'floor'
+  | 'wall'
+  | 'lowWall'
+  | 'crawlspace'
+  | 'vent'
+  /** A closed door. The door system swaps it to `doorOpen` and back at runtime. */
+  | 'door'
+  | 'doorOpen'
+  /** Walkable; the hazard system damages whoever stands on it while it is live. */
+  | 'electrified';
+
+export const TILES: readonly Tile[] = [
+  'floor',
+  'wall',
+  'lowWall',
+  'crawlspace',
+  'vent',
+  'door',
+  'doorOpen',
+  'electrified',
+];
 
 export type Stance = 'stand' | 'crouch' | 'crawl';
 
@@ -51,6 +72,8 @@ export const BLOCK_ALL: BlockMask = MOVE_ALL | SIGHT_ALL | BULLET_ALL;
  *   whoever is lying in it, but rays at standing targets pass over it.
  * - **vent**: enclosed duct. Crawl only, and fully opaque and bulletproof. Noise still
  *   carries out of it (hearing is not a ray, so this table doesn't affect it).
+ * - **door**: closed door, blocks everything; **doorOpen** blocks nothing.
+ * - **electrified**: blocks nothing; it is a hazard, not an obstacle.
  */
 export const TILE_BLOCKS: Readonly<Record<Tile, BlockMask>> = {
   floor: 0,
@@ -58,6 +81,9 @@ export const TILE_BLOCKS: Readonly<Record<Tile, BlockMask>> = {
   lowWall: MOVE_ALL | Block.SightLow | Block.BulletLow,
   crawlspace: Block.Stand | Block.Crouch | Block.SightLow | Block.BulletLow,
   vent: Block.Stand | Block.Crouch | SIGHT_ALL | BULLET_ALL,
+  door: BLOCK_ALL,
+  doorOpen: 0,
+  electrified: 0,
 };
 
 const isLow = (stance: Stance) => stance !== 'stand';

@@ -1,0 +1,97 @@
+{
+  "type": "tileset",
+  "version": "1.10",
+  "tiledversion": "1.11.2",
+  "name": "semantics",
+  "tilewidth": 32,
+  "tileheight": 32,
+  "tilecount": 8,
+  "columns": 8,
+  "margin": 0,
+  "spacing": 0,
+  "image": "semantics.png",
+  "imagewidth": 256,
+  "imageheight": 32,
+  "tiles": [
+    {
+      "id": 0,
+      "properties": [
+        {
+          "name": "semantic",
+          "type": "string",
+          "value": "floor"
+        }
+      ]
+    },
+    {
+      "id": 1,
+      "properties": [
+        {
+          "name": "semantic",
+          "type": "string",
+          "value": "wall"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "properties": [
+        {
+          "name": "semantic",
+          "type": "string",
+          "value": "lowWall"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "properties": [
+        {
+          "name": "semantic",
+          "type": "string",
+          "value": "crawlspace"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "properties": [
+        {
+          "name": "semantic",
+          "type": "string",
+          "value": "vent"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "properties": [
+        {
+          "name": "semantic",
+          "type": "string",
+          "value": "door"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "properties": [
+        {
+          "name": "semantic",
+          "type": "string",
+          "value": "doorOpen"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "properties": [
+        {
+          "name": "semantic",
+          "type": "string",
+          "value": "electrified"
+        }
+      ]
+    }
+  ]
+}
