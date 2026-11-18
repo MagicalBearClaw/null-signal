@@ -1,6 +1,7 @@
 import { World } from 'miniplex';
 import type { Entity } from './components';
 import { EventBus } from './events';
+import { EMPTY_INPUT, type InputSnapshot } from './input';
 
 /** Everything a system may touch during a tick. */
 export interface SimContext {
@@ -8,6 +9,8 @@ export interface SimContext {
   readonly events: EventBus;
   /** Number of completed ticks before this one (0 on the first tick). */
   readonly tick: number;
+  /** Player input for this tick. */
+  readonly input: InputSnapshot;
 }
 
 export interface System {
@@ -19,7 +22,7 @@ export interface System {
 /**
  * The simulation: an ECS world, an event bus, and an ordered list of systems.
  *
- * Each `step(dt)`:
+ * Each `step(dt, input)`:
  *   1. snapshots `transform → prevTransform` (for render interpolation)
  *   2. runs systems in registration order
  *   3. flushes the event bus
@@ -50,7 +53,7 @@ export class Sim {
     return this.systems.map((s) => s.name);
   }
 
-  step(dt: number): void {
+  step(dt: number, input: InputSnapshot = EMPTY_INPUT): void {
     for (const e of this.world.with('transform')) {
       const t = e.transform;
       if (e.prevTransform) {
@@ -63,7 +66,7 @@ export class Sim {
       }
     }
 
-    const ctx: SimContext = { world: this.world, events: this.events, tick: this.tickCount };
+    const ctx: SimContext = { world: this.world, events: this.events, tick: this.tickCount, input };
     for (const system of this.systems) system.update(ctx, dt);
 
     this.events.flush();
