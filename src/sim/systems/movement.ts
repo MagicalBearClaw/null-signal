@@ -2,7 +2,8 @@ import type { System } from '../sim';
 
 /**
  * Integrates velocity and angular velocity into transforms. Collision response is not
- * handled here; grid collision (MIC-69) will run right after this system or replace it.
+ * handled here yet: once a level grid is loaded (MIC-68), colliders move via
+ * `moveAndSlide` from `src/sim/grid/collision.ts`.
  */
 export const movementSystem: System = {
   name: 'movement',
