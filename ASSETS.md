@@ -5,6 +5,6 @@ Every third-party asset used in a shipped build must be listed here. Source file
 Accepted licenses: Fab Standard License, CC0, CC-BY (attribution goes in in-game Credits), Mixamo (Adobe terms).
 Rejected: Fab Legacy License, Reference Only, Personal-use-only, anything unclear.
 
-| Asset | Kind | Source URL | License | Attribution | Used in |
-|---|---|---|---|---|---|
-| _none yet_ | | | | | |
+| Asset      | Kind | Source URL | License | Attribution | Used in |
+| ---------- | ---- | ---------- | ------- | ----------- | ------- |
+| _none yet_ |      |            |         |             |         |

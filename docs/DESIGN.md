@@ -10,17 +10,17 @@ An original top-down stealth-action browser game set inside a VR training simula
 
 ## 2. Platform and stack
 
-| Concern | Decision |
-|---|---|
-| Language / build | TypeScript, Vite |
-| Rendering | three.js (view layer only) |
-| Simulation | Fixed 60 Hz timestep, decoupled from render; `miniplex` ECS |
-| Physics | None. Custom AABB-vs-tile-grid collision, DDA grid raycasts for sight and bullets |
-| Tests | Vitest for all pure simulation logic |
-| Input | Keyboard + mouse and gamepad (Gamepad API), rebindable |
-| Target | Desktop browsers. No mobile |
-| Persistence | Versioned `localStorage`, JSON export/import. No backend |
-| Hosting | GitHub Pages via `actions/deploy-pages` |
+| Concern          | Decision                                                                          |
+| ---------------- | --------------------------------------------------------------------------------- |
+| Language / build | TypeScript, Vite                                                                  |
+| Rendering        | three.js (view layer only)                                                        |
+| Simulation       | Fixed 60 Hz timestep, decoupled from render; `miniplex` ECS                       |
+| Physics          | None. Custom AABB-vs-tile-grid collision, DDA grid raycasts for sight and bullets |
+| Tests            | Vitest for all pure simulation logic                                              |
+| Input            | Keyboard + mouse and gamepad (Gamepad API), rebindable                            |
+| Target           | Desktop browsers. No mobile                                                       |
+| Persistence      | Versioned `localStorage`, JSON export/import. No backend                          |
+| Hosting          | GitHub Pages via `actions/deploy-pages`                                           |
 
 ### 2.1 Architecture
 
@@ -40,22 +40,27 @@ input ─► sim (pure TS, fixed step) ─► render (three.js reads sim state)
 ## 3. Presentation
 
 ### 3.1 Camera
+
 - Default: high overhead follow cam (~60° pitch), tight framing.
 - First-person look/aim toggle (no movement while held; aim weapons).
 - Wall-press peek: camera swings to look past corners.
 
 ### 3.2 Render modes (runtime toggle in Settings)
+
 - **PS1 (default):** 320×240 render target, nearest upscale, vertex snapping, affine texture warping, ordered dither, no mipmaps, short fog, blob shadows, low-poly asset variants.
 - **Modern:** native resolution, shadow maps, tone mapping, bloom, SMAA, PBR materials.
 
 The scene graph is the same in both modes; only materials and post passes differ.
 
 ### 3.3 Themes
+
 Tile semantics (wall, low wall, crawlspace, vent, door, floor types) are separate from visuals. A level declares its theme.
+
 - **Sim Grid** (M1): glowing wireframe VR blocks.
 - **Facility** (M5): cool teal industrial interior.
 
 ### 3.4 HUD (original visual design, restyled per render mode)
+
 - Top-left: life bar.
 - Top-right: alert / evasion status with countdown.
 - Bottom-right: equipped weapon and ammo.
@@ -63,11 +68,13 @@ Tile semantics (wall, low wall, crawlspace, vent, door, floor types) are separat
 - Radar: shows guards and their vision cones. Jammed during Alert or by chaff.
 
 ### 3.5 Audio
+
 Original only: jsfxr-generated or CC0 SFX, synth ambient loops, an original alert stinger. Music and SFX volume sliders.
 
 ## 4. Game flow
 
 ### 4.1 Menus
+
 - First launch: **Start**. After that: **Continue** (furthest unlocked level) and **New Game**.
 - **New Game** asks for confirmation, then resets progress, unlocks, and records. Settings are kept.
 - **Level Select:** tier grid. Completed levels and the current level are selectable. Future levels are locked. Each tile shows its best rank.
@@ -76,6 +83,7 @@ Original only: jsfxr-generated or CC0 SFX, synth ambient loops, an original aler
 - **Credits:** includes every asset attribution from `ASSETS.md`.
 
 ### 4.2 In level
+
 - Death: **Continue** (restart the level, continue counter +1) or **Exit**. No checkpoints.
 - Clear: results screen with rank breakdown, then **Next / Retry / Menu**.
 
@@ -123,23 +131,26 @@ sensors (vision cone, hearing, body discovery, radio)
 ## 9. Arsenal
 
 ### 9.1 Weapons (fictional names to be finalised)
-| # | Weapon | Notes |
-|---|---|---|
-| 1 | Pistol | Suppressor pickup attaches |
-| 2 | Assault rifle | Automatic, loud |
-| 3 | Tranquilizer pistol | Non-lethal KO |
-| 4 | Frag grenade | Lethal, throw arc |
-| 5 | Stun grenade | Non-lethal area KO |
-| 6 | Chaff grenade | Disables cameras, turrets, and radar briefly |
-| 7 | Remote C4 | Place, detonate |
-| 8 | Claymore | Proximity mine |
-| 9 | Guided missile launcher | First-person steering, destroys electronics |
-| 10 | Sniper rifle | Scope with sway |
+
+| #   | Weapon                  | Notes                                        |
+| --- | ----------------------- | -------------------------------------------- |
+| 1   | Pistol                  | Suppressor pickup attaches                   |
+| 2   | Assault rifle           | Automatic, loud                              |
+| 3   | Tranquilizer pistol     | Non-lethal KO                                |
+| 4   | Frag grenade            | Lethal, throw arc                            |
+| 5   | Stun grenade            | Non-lethal area KO                           |
+| 6   | Chaff grenade           | Disables cameras, turrets, and radar briefly |
+| 7   | Remote C4               | Place, detonate                              |
+| 8   | Claymore                | Proximity mine                               |
+| 9   | Guided missile launcher | First-person steering, destroys electronics  |
+| 10  | Sniper rifle            | Scope with sway                              |
 
 ### 9.2 Items
+
 Medkit, keycards L1–L5 (card N opens doors ≤ N), thermal goggles (reveal lasers and mines), mine detector (shows on radar), body armor, disguise crate, suppressor.
 
 ### 9.3 Select UX
+
 Hold a button to open the weapon list (right) or the item list (left). The game is paused while a list is open. A tap toggles the last equipped item or weapon.
 
 ## 10. Hazards and enemies (v1)
@@ -150,14 +161,15 @@ Patrol guard, sentry guard, surveillance camera, gun camera, floor auto-turret, 
 
 ## 11. Assets
 
-| Kind | Source |
-|---|---|
-| Level geometry | Procedural per theme |
+| Kind                       | Source                                                              |
+| -------------------------- | ------------------------------------------------------------------- |
+| Level geometry             | Procedural per theme                                                |
 | Characters, weapons, props | Free **Fab** packs (Standard License only); CC0 Quaternius fallback |
-| Animation | Mixamo |
-| SFX | jsfxr / CC0 |
+| Animation                  | Mixamo                                                              |
+| SFX                        | jsfxr / CC0                                                         |
 
 ### 11.1 Licensing and hosting
+
 - The public code repo never contains Fab or Mixamo files.
 - Source and converted assets live in the **private** repo `null-signal-assets`.
 - `npm run bootstrap` clones the asset repo locally. Contributors without access get placeholders, but only in local dev.
@@ -167,6 +179,7 @@ Patrol guard, sentry guard, surveillance camera, gun camera, floor auto-turret, 
 - `ASSETS.md` lists each asset with its source URL, license tier, and attribution. Legacy and Reference-Only items are rejected.
 
 ### 11.2 Pipeline
+
 Blender → glTF → `gltf-transform` (meshopt, KTX2, texture resize). It produces two variants per asset: `modern` and `ps1` (decimated, 64–128 px textures).
 
 ## 12. Infrastructure
@@ -178,17 +191,18 @@ Blender → glTF → `gltf-transform` (meshopt, KTX2, texture resize). It produc
 
 ## 13. Milestones
 
-| Milestone | Scope |
-|---|---|
-| **M0 Foundation** | Repo, Vite/TS, lint, CI, Pages deploy, ECS + fixed step, input (KB+M, gamepad), Tiled loader, grid collision, debug overlay |
+| Milestone             | Scope                                                                                                                                                                                       |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **M0 Foundation**     | Repo, Vite/TS, lint, CI, Pages deploy, ECS + fixed step, input (KB+M, gamepad), Tiled loader, grid collision, debug overlay                                                                 |
 | **M1 Vertical slice** | Core moveset, Sim Grid theme, overhead cam, 1 level, patrol guard (vision + alert FSM), surveillance camera, keycard door, goal, objective system, rating, results, save/progression, menus |
-| **M2 Stealth depth** | Full moveset, noise and hearing, bodies, radar, first-person look, peek, all hazards |
-| **M3 Arsenal** | 10 weapons, items, select menus, complete HUD |
-| **M4 Presentation** | PS1 and Modern render modes, asset pipeline and private asset repo CI, characters and animations, audio |
-| **M5 Content** | 15 levels, rank tuning, Facility theme |
-| **M6 Release** | Playtesting, performance (PS1 at 60 fps), accessibility basics, v1.0 deploy |
+| **M2 Stealth depth**  | Full moveset, noise and hearing, bodies, radar, first-person look, peek, all hazards                                                                                                        |
+| **M3 Arsenal**        | 10 weapons, items, select menus, complete HUD                                                                                                                                               |
+| **M4 Presentation**   | PS1 and Modern render modes, asset pipeline and private asset repo CI, characters and animations, audio                                                                                     |
+| **M5 Content**        | 15 levels, rank tuning, Facility theme                                                                                                                                                      |
+| **M6 Release**        | Playtesting, performance (PS1 at 60 fps), accessibility basics, v1.0 deploy                                                                                                                 |
 
 ## 14. Open items (tracked as tickets)
+
 - Choose specific Fab packs (requires the owner's Epic account).
 - Create the fine-grained read-only PAT and add it as a CI secret.
 - Finalise fictional weapon names.
