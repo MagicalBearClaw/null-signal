@@ -1,23 +1,26 @@
 import { GameLoop } from './game/gameLoop';
-import { createBootScene } from './render/bootScene';
-import { lerp } from './sim/math';
+import { createBootStage, debugBlockView } from './render/bootScene';
+import { EntityViewSync } from './render/entityViews';
+import { transform } from './sim/components';
+import { Sim } from './sim/sim';
+import { movementSystem } from './sim/systems/movement';
 
 const root = document.getElementById('app');
 if (!root) throw new Error('#app element missing from index.html');
 
-const view = createBootScene(root);
+const sim = new Sim([movementSystem]);
+const stage = createBootStage(root);
+const views = new EntityViewSync(sim.world, stage.scene, { debugBlock: debugBlockView });
 
-// Placeholder sim state until the ECS lands (MIC-66). Keeping prev + current
-// lets render interpolate smoothly at any display refresh rate.
-const SPIN_RAD_PER_SEC = 0.8;
-const sim = { prevYaw: 0, yaw: 0 };
+// Placeholder content until levels load (MIC-68).
+sim.world.add({ transform: transform(), angularVelocity: 0.8, renderable: { kind: 'debugBlock' } });
 
 const loop = new GameLoop(
-  (dt) => {
-    sim.prevYaw = sim.yaw;
-    sim.yaw += SPIN_RAD_PER_SEC * dt;
+  (dt) => sim.step(dt),
+  (alpha) => {
+    views.sync(alpha);
+    stage.render();
   },
-  (alpha) => view.render(lerp(sim.prevYaw, sim.yaw, alpha)),
 );
 
 // Don't simulate time spent in a background tab.
