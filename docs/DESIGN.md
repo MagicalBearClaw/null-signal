@@ -123,7 +123,7 @@ sensors (vision cone, hearing, body discovery, radio)
 ```
 
 - **Global alert machine:** Normal → Suspicious (one guard investigates) → Alert (everyone hunts, reinforcements) → Evasion (search, countdown) → Caution → Normal.
-- **Vision:** cone with distance, stance (crouch, crawl), and lighting modifiers. Grid raycast for occlusion.
+- **Vision:** cone with distance, stance (crouch, crawl), and lighting modifiers. Grid raycast for occlusion. Cover depends on stance: rays at a standing target test only full-height blockers, while rays at a crouched or crawling target also test low ones. That is why crouching behind a low wall hides you and standing doesn't. The same rule applies to bullets (`sightMask` / `bulletMask` in `src/sim/grid/tiles.ts`).
 - **Hearing:** noise events with radius (gunfire, running, knocking, explosions; suppressor reduces radius).
 - **Bodies:** a found body triggers Alert.
 - Footprints come after v1.
