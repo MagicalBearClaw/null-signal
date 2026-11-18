@@ -1,10 +1,17 @@
 import * as THREE from 'three';
 
+export interface BootScene {
+  /** Draws one frame with the block at the given (already interpolated) yaw. */
+  render(yaw: number): void;
+  dispose(): void;
+}
+
 /**
- * Temporary boot scene (MIC-62): a spinning wireframe block on a grid, in the
- * Sim Grid palette. Replaced by the real game loop (MIC-65) and theme renderer (MIC-71).
+ * Temporary boot scene: a spinning wireframe block on a grid, in the Sim Grid
+ * palette. It has no loop of its own; the GameLoop drives it. Replaced by the
+ * theme renderer (MIC-71).
  */
-export function createBootScene(root: HTMLElement): () => void {
+export function createBootScene(root: HTMLElement): BootScene {
   const renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   root.appendChild(renderer.domElement);
@@ -16,18 +23,13 @@ export function createBootScene(root: HTMLElement): () => void {
   camera.position.set(0, 4, 5);
   camera.lookAt(0, 0.5, 0);
 
-  const grid = new THREE.GridHelper(20, 20, 0x1de9b6, 0x0b3b33);
-  scene.add(grid);
+  scene.add(new THREE.GridHelper(20, 20, 0x1de9b6, 0x0b3b33));
 
   const block = new THREE.Group();
   const geometry = new THREE.BoxGeometry(1, 1, 1);
+  const edges = new THREE.EdgesGeometry(geometry);
   block.add(new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: 0x062a24 })));
-  block.add(
-    new THREE.LineSegments(
-      new THREE.EdgesGeometry(geometry),
-      new THREE.LineBasicMaterial({ color: 0x1de9b6 }),
-    ),
-  );
+  block.add(new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x1de9b6 })));
   block.position.y = 0.5;
   scene.add(block);
 
@@ -40,16 +42,17 @@ export function createBootScene(root: HTMLElement): () => void {
   resize();
   window.addEventListener('resize', resize);
 
-  renderer.setAnimationLoop((timeMs) => {
-    block.rotation.y = timeMs * 0.0008;
-    renderer.render(scene, camera);
-  });
-
-  return () => {
-    renderer.setAnimationLoop(null);
-    window.removeEventListener('resize', resize);
-    renderer.dispose();
-    geometry.dispose();
-    root.removeChild(renderer.domElement);
+  return {
+    render(yaw) {
+      block.rotation.y = yaw;
+      renderer.render(scene, camera);
+    },
+    dispose() {
+      window.removeEventListener('resize', resize);
+      renderer.dispose();
+      geometry.dispose();
+      edges.dispose();
+      root.removeChild(renderer.domElement);
+    },
   };
 }
