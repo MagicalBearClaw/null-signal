@@ -2,6 +2,7 @@
 
 An original top-down stealth-action browser game set inside a VR training simulator. Built with TypeScript, Vite and three.js.
 
+- Play: https://magicalbearclaw.github.io/null-signal/
 - Design: [docs/DESIGN.md](docs/DESIGN.md)
 - Asset licensing: [ASSETS.md](ASSETS.md)
 
