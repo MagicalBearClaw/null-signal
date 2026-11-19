@@ -10,9 +10,14 @@
   "tileheight": 32,
   "infinite": false,
   "nextlayerid": 3,
-  "nextobjectid": 12,
+  "nextobjectid": 13,
   "compressionlevel": -1,
   "properties": [
+    {
+      "name": "cameraDistance",
+      "type": "float",
+      "value": 9
+    },
     {
       "name": "objective",
       "type": "string",
@@ -397,6 +402,29 @@
               "name": "target",
               "type": "object",
               "value": 7
+            }
+          ]
+        },
+        {
+          "id": 12,
+          "name": "south room",
+          "type": "cameraZone",
+          "x": 0,
+          "y": 160,
+          "width": 320,
+          "height": 96,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "pitch",
+              "type": "float",
+              "value": 75
+            },
+            {
+              "name": "distance",
+              "type": "float",
+              "value": 8
             }
           ]
         }

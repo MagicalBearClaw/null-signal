@@ -223,3 +223,31 @@ describe('loadLevel: validation', () => {
     expect(() => loadLevel('fixture', m)).toThrow(/no tileset resolver was given/);
   });
 });
+
+describe('loadLevel: camera framing', () => {
+  it('reads map camera settings, with defaults for missing ones', () => {
+    const level = load();
+    expect(level.camera).toEqual({ pitch: 60, distance: 9 }); // pitch defaulted, distance set
+  });
+
+  it('reads camera zones in tile units', () => {
+    expect(load().cameraZones).toEqual([
+      { x: 0, z: 5, width: 10, depth: 3, framing: { pitch: 75, distance: 8 } },
+    ]);
+  });
+
+  it('fills zone framing from the map when a zone leaves a value out', () => {
+    const m = fixture();
+    objectById(m, 12).properties = [{ name: 'pitch', type: 'float', value: 80 }];
+    expect(load(m).cameraZones[0]?.framing).toEqual({ pitch: 80, distance: 9 });
+  });
+
+  it('rejects out-of-range pitch and non-rectangle zones', () => {
+    const m = fixture();
+    objectById(m, 12).properties[0].value = 10;
+    m.layers[1].objects.push({ id: 60, type: 'cameraZone', x: 32, y: 32 });
+    const text = issuesOf(m).join('\n');
+    expect(text).toMatch(/cameraZone #12 "south room" pitch:/);
+    expect(text).toMatch(/cameraZone #60: camera zones must be rectangles/);
+  });
+});

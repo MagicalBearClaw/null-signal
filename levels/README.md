@@ -18,6 +18,8 @@ Levels are authored in [Tiled](https://www.mapeditor.org/) and loaded by `loadLe
 | `objectiveParams` | string | JSON object, e.g. `{"items":["keycard"]}` (optional)                       |
 | `parTime`         | float  | seconds, e.g. `90`                                                         |
 | `rankThresholds`  | string | `{"S":9000,"A":7000,"B":5000,"C":3000}`, strictly descending               |
+| `cameraPitch`     | float  | degrees above the horizon, 20–90 (optional, default 60)                    |
+| `cameraDistance`  | float  | tiles from the player (optional, default 10)                               |
 
 ## Objects
 
@@ -35,6 +37,7 @@ Set the object's **Class** to one of the types below. Angles (`facing`, `sweep`)
 | `door`   | point on a door tile | `keycard` (0 = no card needed). Every door tile needs exactly one.          |
 | `pickup` | point                | `item` (required), `amount` (1)                                             |
 | `switch` | point                | `target` → a `door` or `laser` (optional)                                   |
+| `cameraZone` | rectangle        | `pitch`, `distance` (default: the map's camera settings). Later zones win where they overlap. |
 
 The loader reports every problem it finds at once, with the object's id and name.
 

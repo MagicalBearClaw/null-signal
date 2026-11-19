@@ -3,23 +3,35 @@
   "commands": [],
   "compatibilityVersion": 1100,
   "extensionsPath": "extensions",
-  "folders": ["."],
+  "folders": [
+    "."
+  ],
   "properties": [],
   "propertyTypes": [
     {
       "id": 1,
       "name": "spawn",
       "type": "class",
-      "useAs": ["object"],
+      "useAs": [
+        "object"
+      ],
       "color": "#ff1de9b6",
       "drawFill": true,
-      "members": [{ "name": "facing", "type": "float", "value": 0 }]
+      "members": [
+        {
+          "name": "facing",
+          "type": "float",
+          "value": 0
+        }
+      ]
     },
     {
       "id": 2,
       "name": "goal",
       "type": "class",
-      "useAs": ["object"],
+      "useAs": [
+        "object"
+      ],
       "color": "#ff1de9b6",
       "drawFill": true,
       "members": []
@@ -28,19 +40,31 @@
       "id": 3,
       "name": "guard",
       "type": "class",
-      "useAs": ["object"],
+      "useAs": [
+        "object"
+      ],
       "color": "#ffe93d1d",
       "drawFill": true,
       "members": [
-        { "name": "facing", "type": "float", "value": 0 },
-        { "name": "patrol", "type": "object", "value": 0 }
+        {
+          "name": "facing",
+          "type": "float",
+          "value": 0
+        },
+        {
+          "name": "patrol",
+          "type": "object",
+          "value": 0
+        }
       ]
     },
     {
       "id": 4,
       "name": "patrol",
       "type": "class",
-      "useAs": ["object"],
+      "useAs": [
+        "object"
+      ],
       "color": "#ffe9a01d",
       "drawFill": false,
       "members": []
@@ -49,70 +73,160 @@
       "id": 5,
       "name": "camera",
       "type": "class",
-      "useAs": ["object"],
+      "useAs": [
+        "object"
+      ],
       "color": "#ffe9b61d",
       "drawFill": true,
       "members": [
-        { "name": "facing", "type": "float", "value": 0 },
-        { "name": "sweep", "type": "float", "value": 90 },
-        { "name": "range", "type": "float", "value": 6 }
+        {
+          "name": "facing",
+          "type": "float",
+          "value": 0
+        },
+        {
+          "name": "sweep",
+          "type": "float",
+          "value": 90
+        },
+        {
+          "name": "range",
+          "type": "float",
+          "value": 6
+        }
       ]
     },
     {
       "id": 6,
       "name": "turret",
       "type": "class",
-      "useAs": ["object"],
+      "useAs": [
+        "object"
+      ],
       "color": "#ffe9b61d",
       "drawFill": true,
       "members": [
-        { "name": "facing", "type": "float", "value": 0 },
-        { "name": "sweep", "type": "float", "value": 90 },
-        { "name": "range", "type": "float", "value": 8 }
+        {
+          "name": "facing",
+          "type": "float",
+          "value": 0
+        },
+        {
+          "name": "sweep",
+          "type": "float",
+          "value": 90
+        },
+        {
+          "name": "range",
+          "type": "float",
+          "value": 8
+        }
       ]
     },
     {
       "id": 7,
       "name": "laser",
       "type": "class",
-      "useAs": ["object"],
+      "useAs": [
+        "object"
+      ],
       "color": "#ffff2050",
       "drawFill": false,
       "members": [
-        { "name": "mode", "type": "string", "value": "alarm" },
-        { "name": "onSeconds", "type": "float", "value": 0 },
-        { "name": "offSeconds", "type": "float", "value": 0 }
+        {
+          "name": "mode",
+          "type": "string",
+          "value": "alarm"
+        },
+        {
+          "name": "onSeconds",
+          "type": "float",
+          "value": 0
+        },
+        {
+          "name": "offSeconds",
+          "type": "float",
+          "value": 0
+        }
       ]
     },
     {
       "id": 8,
       "name": "door",
       "type": "class",
-      "useAs": ["object"],
+      "useAs": [
+        "object"
+      ],
       "color": "#ffe9b61d",
       "drawFill": true,
-      "members": [{ "name": "keycard", "type": "int", "value": 0 }]
+      "members": [
+        {
+          "name": "keycard",
+          "type": "int",
+          "value": 0
+        }
+      ]
     },
     {
       "id": 9,
       "name": "pickup",
       "type": "class",
-      "useAs": ["object"],
+      "useAs": [
+        "object"
+      ],
       "color": "#ff3a9ee9",
       "drawFill": true,
       "members": [
-        { "name": "item", "type": "string", "value": "" },
-        { "name": "amount", "type": "int", "value": 1 }
+        {
+          "name": "item",
+          "type": "string",
+          "value": ""
+        },
+        {
+          "name": "amount",
+          "type": "int",
+          "value": 1
+        }
       ]
     },
     {
       "id": 10,
       "name": "switch",
       "type": "class",
-      "useAs": ["object"],
+      "useAs": [
+        "object"
+      ],
       "color": "#ff9e3ae9",
       "drawFill": true,
-      "members": [{ "name": "target", "type": "object", "value": 0 }]
+      "members": [
+        {
+          "name": "target",
+          "type": "object",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "name": "cameraZone",
+      "type": "class",
+      "useAs": [
+        "object"
+      ],
+      "color": "#ff808080",
+      "drawFill": false,
+      "members": [
+        {
+          "name": "pitch",
+          "type": "float",
+          "value": 60
+        },
+        {
+          "name": "distance",
+          "type": "float",
+          "value": 10
+        }
+      ]
     }
   ]
 }

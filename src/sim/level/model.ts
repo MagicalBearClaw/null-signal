@@ -94,6 +94,18 @@ export interface SwitchDef {
   readonly target: number | null;
 }
 
+/** Overhead camera framing (render reads it; the sim never does). */
+export interface CameraFraming {
+  /** Degrees above the horizon. */
+  readonly pitch: number;
+  /** Distance from the player, in tiles. */
+  readonly distance: number;
+}
+
+export interface CameraZoneDef extends Rect {
+  readonly framing: CameraFraming;
+}
+
 export interface Level {
   readonly name: string;
   readonly width: number;
@@ -114,6 +126,10 @@ export interface Level {
   readonly doors: readonly DoorDef[];
   readonly pickups: readonly PickupDef[];
   readonly switches: readonly SwitchDef[];
+  /** Default camera framing for the level. */
+  readonly camera: CameraFraming;
+  /** Areas with their own framing; later entries win where they overlap. */
+  readonly cameraZones: readonly CameraZoneDef[];
 }
 
 /** A fresh, mutable collision grid for a run of this level (doors change it). */

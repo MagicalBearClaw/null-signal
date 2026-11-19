@@ -1,19 +1,20 @@
 import * as THREE from 'three';
+import type { CameraPose } from './camera/cameraController';
 import { withUpdate, type ViewFactory } from './entityViews';
 
 export interface Stage {
   readonly scene: THREE.Scene;
   readonly camera: THREE.PerspectiveCamera;
   readonly canvas: HTMLCanvasElement;
-  /** Points the camera at a level of the given size (in tiles). */
-  frame(width: number, depth: number): void;
+  /** Places the camera at a pose from the camera controller. */
+  applyPose(pose: CameraPose): void;
   render(): void;
   dispose(): void;
 }
 
 /**
- * Temporary stage: renderer, scene and a fixed camera framing the level, in the Sim Grid
- * palette. The overhead camera (MIC-72) and the theme renderer (MIC-71) replace it.
+ * Temporary stage: renderer, scene and camera in the Sim Grid palette. The camera is
+ * driven by `CameraController`; the theme renderer (MIC-71) replaces the rest.
  */
 export function createBootStage(root: HTMLElement): Stage {
   const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -34,18 +35,16 @@ export function createBootStage(root: HTMLElement): Stage {
   resize();
   window.addEventListener('resize', resize);
 
-  const frame = (width: number, depth: number): void => {
-    const size = Math.max(width, depth);
-    camera.position.set(width / 2, size * 0.95, depth / 2 + size * 0.55);
-    camera.lookAt(width / 2, 0, depth / 2);
+  const applyPose = (pose: CameraPose): void => {
+    camera.position.set(pose.position.x, pose.position.y, pose.position.z);
+    camera.lookAt(pose.target.x, pose.target.y, pose.target.z);
   };
-  frame(10, 10);
 
   return {
     scene,
     camera,
     canvas: renderer.domElement,
-    frame,
+    applyPose,
     render: () => renderer.render(scene, camera),
     dispose() {
       window.removeEventListener('resize', resize);
