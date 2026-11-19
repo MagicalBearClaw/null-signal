@@ -1,6 +1,7 @@
 import GUI from 'lil-gui';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { Stage } from '../render/bootScene';
+import type { CameraController } from '../render/camera/cameraController';
 import { DebugDraw } from '../render/debug/debugDraw';
 import type { Grid } from '../sim/grid/grid';
 import type { Level } from '../sim/level/model';
@@ -17,6 +18,7 @@ import type { Sim } from '../sim/sim';
 export interface DevToolsHost {
   readonly sim: Sim;
   readonly stage: Stage;
+  readonly camera: CameraController;
   readonly levelIds: readonly string[];
   readonly currentLevelId: string;
   /** Loads a level by id and returns it with its fresh grid. */
@@ -52,16 +54,10 @@ export function installDevTools(host: DevToolsHost): DevTools {
   d.add(draw.layers, 'vision').name('vision cones');
   d.add(draw.layers, 'patrols').name('patrol paths');
 
+  // Free camera: orbit around what the gameplay camera was looking at; turning it off
+  // hands control back to the follow camera, which snaps to the player.
   const controls = new OrbitControls(stage.camera, stage.canvas);
   controls.enabled = false;
-  let current: Level | null = null;
-
-  const reframe = () => {
-    if (!current) return;
-    stage.frame(current.width, current.depth);
-    controls.target.set(current.width / 2, 0, current.depth / 2);
-    controls.update();
-  };
 
   const w = gui.addFolder('World');
   w.add(settings, 'level', [...host.levelIds]).onChange((id: string) => {
@@ -72,14 +68,19 @@ export function installDevTools(host: DevToolsHost): DevTools {
     .name('free camera')
     .onChange((on: boolean) => {
       controls.enabled = on;
-      if (!on) reframe();
+      host.camera.enabled = !on;
+      if (on) {
+        const t = host.camera.pose.target;
+        controls.target.set(t.x, t.y, t.z);
+        controls.update();
+      } else {
+        host.camera.snap();
+      }
     });
 
   function levelLoaded(level: Level, grid: Grid): void {
-    current = level;
     settings.level = level.name;
     draw.setLevel(level, grid);
-    if (!controls.enabled) reframe();
   }
 
   let frames = 0;

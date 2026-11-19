@@ -5,6 +5,7 @@ import { wrapAngle } from '../math';
 import {
   OBJECTIVE_TYPES,
   THEMES,
+  type CameraZoneDef,
   type DoorDef,
   type GuardDef,
   type LaserDef,
@@ -23,8 +24,9 @@ import {
  * - One tile layer. Each tileset tile carries a string property `semantic` naming a
  *   {@link Tile}. Unpainted cells are walls.
  * - Object layers hold typed objects (Tiled "Class"): spawn, goal, guard, patrol, camera,
- *   turret, laser, door, pickup, switch.
- * - Map properties: theme, objective, objectiveParams, parTime, rankThresholds.
+ *   turret, laser, door, pickup, switch, cameraZone.
+ * - Map properties: theme, objective, objectiveParams, parTime, rankThresholds, and optional
+ *   cameraPitch / cameraDistance.
  *
  * All problems found are reported together in one {@link LevelError}.
  */
@@ -132,6 +134,8 @@ const MapPropsSchema = z.object({
   objective: z.enum(OBJECTIVE_TYPES),
   objectiveParams: json(z.record(z.string(), z.unknown(), { error: 'must be a JSON object' })).default({}),
   parTime: z.number().positive(),
+  cameraPitch: z.number().min(20).max(90).default(60),
+  cameraDistance: z.number().positive().default(10),
   rankThresholds: json(
     z.object(
       { S: z.number(), A: z.number(), B: z.number(), C: z.number() },
@@ -158,6 +162,10 @@ const LaserProps = z.object({
 const DoorProps = z.object({ keycard: z.number().int().nonnegative().default(0) });
 const PickupProps = z.object({ item: z.string().min(1), amount: z.number().int().positive().default(1) });
 const SwitchProps = z.object({ target: objectRef });
+const CameraZoneProps = z.object({
+  pitch: z.number().min(20).max(90).optional(),
+  distance: z.number().positive().optional(),
+});
 
 const OBJECT_KINDS = [
   'spawn',
@@ -170,6 +178,7 @@ const OBJECT_KINDS = [
   'door',
   'pickup',
   'switch',
+  'cameraZone',
 ] as const;
 type ObjectKind = (typeof OBJECT_KINDS)[number];
 
@@ -250,6 +259,8 @@ export function loadLevel(
   const doors: DoorDef[] = [];
   const pickups: PickupDef[] = [];
   const switches: SwitchDef[] = [];
+  // Zone framing may fall back to map defaults, which are only known after parsing.
+  const zones: { rect: Rect; pitch: number | undefined; distance: number | undefined }[] = [];
 
   for (const o of objects) {
     const kind = kindOf(o);
@@ -367,6 +378,18 @@ export function loadLevel(
         switches.push({ id: o.id, ...at, target: p.target ?? null });
         break;
       }
+      case 'cameraZone': {
+        const p = parseProps(CameraZoneProps, o, ctx);
+        if (o.width <= 0 || o.height <= 0 || o.polyline) {
+          issues.push(`${where}: camera zones must be rectangles`);
+          break;
+        }
+        if (p) {
+          const rect = { x: o.x / unit, z: o.y / unit, width: o.width / unit, depth: o.height / unit };
+          zones.push({ rect, pitch: p.pitch, distance: p.distance });
+        }
+        break;
+      }
     }
   }
 
@@ -384,6 +407,11 @@ export function loadLevel(
   if (issues.length > 0 || !props.success) throw fail();
   const [spawn] = spawns as [Placement];
   const mp = props.data;
+  const camera = { pitch: mp.cameraPitch, distance: mp.cameraDistance };
+  const cameraZones: CameraZoneDef[] = zones.map((zn) => ({
+    ...zn.rect,
+    framing: { pitch: zn.pitch ?? camera.pitch, distance: zn.distance ?? camera.distance },
+  }));
 
   return {
     name,
@@ -403,6 +431,8 @@ export function loadLevel(
     doors,
     pickups,
     switches,
+    camera,
+    cameraZones,
   };
 }
 
