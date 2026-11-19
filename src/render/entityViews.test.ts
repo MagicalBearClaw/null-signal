@@ -3,7 +3,7 @@ import { BoxGeometry, Group, Mesh, MeshBasicMaterial } from 'three';
 import { transform } from '../sim/components';
 import { Sim } from '../sim/sim';
 import { movementSystem } from '../sim/systems/movement';
-import { EntityViewSync } from './entityViews';
+import { EntityViewSync, withUpdate } from './entityViews';
 
 function setup() {
   const sim = new Sim([movementSystem]);
@@ -55,5 +55,30 @@ describe('EntityViewSync', () => {
     expect(views.viewOf(e)?.position.x).toBeCloseTo(0.25);
     views.sync(1);
     expect(views.viewOf(e)?.position.x).toBeCloseTo(1);
+  });
+});
+
+describe('withUpdate', () => {
+  it('runs the view update every sync with the entity, after the pose', () => {
+    const sim = new Sim([]);
+    const root = new Group();
+    const views = new EntityViewSync(sim.world, root, {
+      squash: () => {
+        const g = new Group();
+        return withUpdate(g, (e) => {
+          g.scale.y = e.collider?.height ?? 1;
+        });
+      },
+    });
+    const e = sim.world.add({
+      transform: transform(),
+      collider: { halfWidth: 0.3, halfDepth: 0.3, height: 0.5 },
+      renderable: { kind: 'squash' },
+    });
+    views.sync(1);
+    expect(views.viewOf(e)?.scale.y).toBe(0.5);
+    e.collider.height = 0.9;
+    views.sync(1);
+    expect(views.viewOf(e)?.scale.y).toBe(0.9);
   });
 });

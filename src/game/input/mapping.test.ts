@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_BINDINGS, PAD } from './bindings';
-import { applyDeadzone, EMPTY_RAW, mapInput, SnapshotTracker, type RawInput, type RawPad } from './mapping';
+import {
+  applyDeadzone,
+  DEFAULT_DEADZONE,
+  EMPTY_RAW,
+  mapInput,
+  screenToWorld,
+  SnapshotTracker,
+  type RawInput,
+  type RawPad,
+} from './mapping';
 
 const raw = (over: Partial<RawInput>): RawInput => ({ ...EMPTY_RAW, ...over });
 const keys = (...codes: string[]) => raw({ keys: new Set(codes) });
@@ -110,5 +119,31 @@ describe('SnapshotTracker', () => {
     const s = new SnapshotTracker().next(map(raw({ keys: new Set(['KeyS']), pointer: { x: 1, y: 0 } })));
     expect(s.move).toEqual({ x: 0, z: 1 });
     expect(s.look).toEqual({ x: 1, z: 0 });
+  });
+});
+
+describe('camera-relative input', () => {
+  it('leaves input unchanged for the north-up camera', () => {
+    expect(screenToWorld({ x: 0.5, z: -1 }, 0)).toEqual({ x: 0.5, z: -1 });
+  });
+
+  it('maps "up" to away from the camera when it faces west', () => {
+    const v = screenToWorld({ x: 0, z: -1 }, Math.PI / 2);
+    expect(v.x).toBeCloseTo(-1);
+    expect(v.z).toBeCloseTo(0);
+    const right = screenToWorld({ x: 1, z: 0 }, Math.PI / 2);
+    expect(right.x).toBeCloseTo(0);
+    expect(right.z).toBeCloseTo(-1); // screen-right is north when looking west
+  });
+
+  it('applies to both move and look in mapInput', () => {
+    const m = mapInput(
+      { ...EMPTY_RAW, keys: new Set(['KeyW']), pointer: { x: 0, y: -1 } },
+      DEFAULT_BINDINGS,
+      DEFAULT_DEADZONE,
+      Math.PI,
+    );
+    expect(m.move.z).toBeCloseTo(1); // camera faces south, so "up" is south
+    expect(m.look?.z).toBeCloseTo(1);
   });
 });

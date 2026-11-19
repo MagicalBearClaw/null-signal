@@ -3,8 +3,20 @@ import type { World } from 'miniplex';
 import type { Entity } from '../sim/components';
 import { lerp, lerpAngle } from '../sim/math';
 
-/** Builds the three.js view for one renderable kind. */
+/**
+ * Builds the three.js view for one renderable kind. A view that reflects more than pose
+ * (e.g. crouch height) can set `view.userData.update = (entity) => ...`; it runs every
+ * `sync` after the pose is applied. Use {@link withUpdate} for type safety.
+ */
 export type ViewFactory = (entity: Entity) => Object3D;
+
+type ViewUpdate = (entity: Entity) => void;
+
+/** Attaches a per-frame update to a view (see {@link ViewFactory}). */
+export function withUpdate<T extends Object3D>(view: T, update: ViewUpdate): T {
+  view.userData.update = update;
+  return view;
+}
 
 type Rendered = Entity & Required<Pick<Entity, 'transform' | 'renderable'>>;
 
@@ -49,6 +61,7 @@ export class EntityViewSync {
       const prev = e.prevTransform ?? cur;
       view.position.set(lerp(prev.x, cur.x, alpha), lerp(prev.y, cur.y, alpha), lerp(prev.z, cur.z, alpha));
       view.rotation.y = lerpAngle(prev.yaw, cur.yaw, alpha);
+      (view.userData.update as ViewUpdate | undefined)?.(e);
     }
   }
 

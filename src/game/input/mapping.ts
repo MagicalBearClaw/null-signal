@@ -75,8 +75,28 @@ export interface MappedInput {
   readonly held: ReadonlySet<ButtonAction>;
 }
 
-/** Applies bindings to one raw sample. Pure. */
-export function mapInput(raw: RawInput, bindings: Bindings, deadzone = DEFAULT_DEADZONE): MappedInput {
+/**
+ * Turns a screen-space vector (+x right, +z down) into world X/Z for a camera whose yaw
+ * is `cameraYaw` (sim convention: 0 looks north, so screen up = -Z). Makes "push up"
+ * mean "away from the camera" whichever way the camera faces.
+ */
+export function screenToWorld(v: Vec2, cameraYaw: number): Vec2 {
+  if (cameraYaw === 0) return v;
+  const c = Math.cos(cameraYaw);
+  const s = Math.sin(cameraYaw);
+  return { x: v.x * c + v.z * s, z: -v.x * s + v.z * c };
+}
+
+/**
+ * Applies bindings to one raw sample. Pure. `move` and `look` come out in world X/Z,
+ * relative to a camera at `cameraYaw` (0 for the north-up overhead camera).
+ */
+export function mapInput(
+  raw: RawInput,
+  bindings: Bindings,
+  deadzone = DEFAULT_DEADZONE,
+  cameraYaw = 0,
+): MappedInput {
   const held = new Set<ButtonAction>();
   for (const action of BUTTON_ACTIONS) {
     if (bindings.buttons[action].some((b) => isDown(b, raw))) held.add(action);
@@ -102,7 +122,11 @@ export function mapInput(raw: RawInput, bindings: Bindings, deadzone = DEFAULT_D
         ? { x: raw.pointer.x, z: raw.pointer.y }
         : null;
 
-  return { move: { x, z }, look, held };
+  return {
+    move: screenToWorld({ x, z }, cameraYaw),
+    look: look && screenToWorld(look, cameraYaw),
+    held,
+  };
 }
 
 /** Turns successive mapped samples into snapshots with pressed/released edges. */

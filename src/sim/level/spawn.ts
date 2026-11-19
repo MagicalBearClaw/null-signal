@@ -1,9 +1,14 @@
 import { transform, type Collider } from '../components';
+import { PLAYER } from '../player/tuning';
 import type { Sim } from '../sim';
 import { createGrid, type Level } from './model';
 
-/** Placeholder body sizes until the moveset/AI tickets tune them. */
-export const PLAYER_COLLIDER: Collider = { halfWidth: 0.3, halfDepth: 0.3, height: 1.6 };
+/** Guard size is a placeholder until the AI tickets tune it. */
+export const PLAYER_COLLIDER: Collider = {
+  halfWidth: PLAYER.collider.halfWidth,
+  halfDepth: PLAYER.collider.halfDepth,
+  height: PLAYER.collider.standHeight,
+};
 export const GUARD_COLLIDER: Collider = { halfWidth: 0.3, halfDepth: 0.3, height: 1.7 };
 
 /**
@@ -20,6 +25,8 @@ export function startLevel(sim: Sim, level: Level): void {
     transform: transform(spawn.x, spawn.z, spawn.yaw),
     velocity: { x: 0, z: 0 },
     collider: { ...PLAYER_COLLIDER },
+    stance: 'stand',
+    locomotion: { running: false, travelled: 0 },
     renderable: { kind: 'player' },
     player: true,
   });
