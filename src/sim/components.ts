@@ -1,3 +1,5 @@
+import type { Stance } from './grid/tiles';
+
 /**
  * ECS component catalogue (miniplex). An entity is a plain object; every component
  * is an optional property. Systems query by property name, e.g. `world.with('transform', 'velocity')`.
@@ -32,6 +34,15 @@ export interface Collider {
   height: number; // Y extent from transform.y
 }
 
+/**
+ * Locomotion state shared by the player and (later) guards. `running` is set by the
+ * controller each tick; `travelled` accumulates distance toward the next footstep noise.
+ */
+export interface Locomotion {
+  running: boolean;
+  travelled: number;
+}
+
 /** Tells the render layer which view to build. The sim never reads it. */
 export interface Renderable {
   kind: string;
@@ -49,6 +60,9 @@ export interface Entity {
   /** Radians per second about +Y. */
   angularVelocity?: number;
   collider?: Collider;
+  /** Body posture. Sensors read it (low targets are harder to see), movement uses it for tile blocking. */
+  stance?: Stance;
+  locomotion?: Locomotion;
   renderable?: Renderable;
 
   // ── Tags (presence-only) ──────────────────────────────

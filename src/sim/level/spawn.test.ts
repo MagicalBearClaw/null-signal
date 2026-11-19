@@ -4,7 +4,7 @@ import tilesetRaw from '../../../levels/tilesets/semantics.tsj?raw';
 import { EMPTY_INPUT } from '../input';
 import { Sim } from '../sim';
 import { movementSystem } from '../systems/movement';
-import { playerInputSystem, WALK_SPEED } from '../systems/playerInput';
+import { playerInputSystem } from '../systems/playerInput';
 import { PLAYER_COLLIDER, startLevel } from './spawn';
 import { loadLevel } from './tiled';
 
@@ -44,6 +44,5 @@ describe('startLevel', () => {
     const [player] = sim.world.with('player', 'transform');
     // Spawn is at x 1.5 with a wall column at x ∈ [0, 1): stops flush at 1 + halfWidth.
     expect(player?.transform.x).toBeCloseTo(1 + PLAYER_COLLIDER.halfWidth);
-    expect(WALK_SPEED * 2).toBeGreaterThan(1); // sanity: it really tried to go further
   });
 });

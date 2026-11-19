@@ -10,13 +10,14 @@ import { createLevelView, disposeLevelView } from './render/levelView';
 import type { Object3D } from 'three';
 import { startLevel } from './sim/level/spawn';
 import { Sim } from './sim/sim';
+import { footstepSystem } from './sim/systems/footsteps';
 import { movementSystem } from './sim/systems/movement';
 import { playerInputSystem } from './sim/systems/playerInput';
 
 const root = document.getElementById('app');
 if (!root) throw new Error('#app element missing from index.html');
 
-const sim = new Sim([playerInputSystem, movementSystem]);
+const sim = new Sim([playerInputSystem, movementSystem, footstepSystem]);
 const stage = createBootStage(root);
 const views = new EntityViewSync(sim.world, stage.scene, { player: playerView, guard: guardView });
 
