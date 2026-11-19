@@ -1,3 +1,4 @@
+import type { AiState } from './ai/types';
 import type { Stance } from './grid/tiles';
 
 /**
@@ -64,6 +65,8 @@ export interface Entity {
   stance?: Stance;
   locomotion?: Locomotion;
   renderable?: Renderable;
+  /** Guard brain: blackboard, decision state and action memory (src/sim/ai). */
+  ai?: AiState;
 
   // ── Tags (presence-only) ──────────────────────────────
   player?: true;

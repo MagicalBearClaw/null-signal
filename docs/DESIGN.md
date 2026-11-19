@@ -122,6 +122,7 @@ sensors (vision cone, hearing, body discovery, radio)
       ─► actions (patrol, investigate, chase, shoot, search, call radio, return)
 ```
 
+- **Code:** `src/sim/ai/`. Sensors write a per-guard `Blackboard`, and all guards share a `SquadBlackboard` on the sim. Conditions are declarative fact sets (`{ seesPlayer: true }`). Each action declares its preconditions and effects in the same vocabulary, so a GOAP planner can replace the FSM later. The guard's state table is in `guardBrain.ts`: parent transitions beat child ones, and the first match wins.
 - **Global alert machine:** Normal → Suspicious (one guard investigates) → Alert (everyone hunts, reinforcements) → Evasion (search, countdown) → Caution → Normal.
 - **Vision:** cone with distance, stance (crouch, crawl), and lighting modifiers. Grid raycast for occlusion. Cover depends on stance: rays at a standing target test only full-height blockers, while rays at a crouched or crawling target also test low ones. That is why crouching behind a low wall hides you and standing doesn't. The same rule applies to bullets (`sightMask` / `bulletMask` in `src/sim/grid/tiles.ts`).
 - **Hearing:** noise events with radius (gunfire, running, knocking, explosions; suppressor reduces radius).

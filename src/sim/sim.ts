@@ -1,4 +1,5 @@
 import { World } from 'miniplex';
+import { createSquad, type SquadBlackboard } from './ai/blackboard';
 import type { Entity } from './components';
 import { EventBus } from './events';
 import type { Grid } from './grid/grid';
@@ -14,6 +15,8 @@ export interface SimContext {
   readonly input: InputSnapshot;
   /** Collision grid of the loaded level, or null when no level is loaded. */
   readonly grid: Grid | null;
+  /** Shared guard knowledge: alert level, last known player position. */
+  readonly squad: SquadBlackboard;
 }
 
 export interface System {
@@ -38,6 +41,7 @@ export class Sim {
   readonly events = new EventBus();
   /** Set by the level runtime; systems read it through `ctx.grid`. */
   grid: Grid | null = null;
+  squad: SquadBlackboard = createSquad();
   private readonly systems: readonly System[];
   private tickCount = 0;
 
@@ -55,6 +59,7 @@ export class Sim {
     for (const e of [...this.world.entities]) this.world.remove(e);
     this.events.clear();
     this.grid = null;
+    this.squad = createSquad();
   }
 
   get tick(): number {
@@ -84,6 +89,7 @@ export class Sim {
       tick: this.tickCount,
       input,
       grid: this.grid,
+      squad: this.squad,
     };
     for (const system of this.systems) system.update(ctx, dt);
 
