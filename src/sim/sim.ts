@@ -1,6 +1,7 @@
 import { World } from 'miniplex';
 import type { Entity } from './components';
 import { EventBus } from './events';
+import type { Grid } from './grid/grid';
 import { EMPTY_INPUT, type InputSnapshot } from './input';
 
 /** Everything a system may touch during a tick. */
@@ -11,6 +12,8 @@ export interface SimContext {
   readonly tick: number;
   /** Player input for this tick. */
   readonly input: InputSnapshot;
+  /** Collision grid of the loaded level, or null when no level is loaded. */
+  readonly grid: Grid | null;
 }
 
 export interface System {
@@ -33,6 +36,8 @@ export interface System {
 export class Sim {
   readonly world = new World<Entity>();
   readonly events = new EventBus();
+  /** Set by the level runtime; systems read it through `ctx.grid`. */
+  grid: Grid | null = null;
   private readonly systems: readonly System[];
   private tickCount = 0;
 
@@ -43,6 +48,13 @@ export class Sim {
       names.add(s.name);
     }
     this.systems = [...systems];
+  }
+
+  /** Removes every entity and pending event, e.g. before loading another level. */
+  reset(): void {
+    for (const e of [...this.world.entities]) this.world.remove(e);
+    this.events.clear();
+    this.grid = null;
   }
 
   get tick(): number {
@@ -66,7 +78,13 @@ export class Sim {
       }
     }
 
-    const ctx: SimContext = { world: this.world, events: this.events, tick: this.tickCount, input };
+    const ctx: SimContext = {
+      world: this.world,
+      events: this.events,
+      tick: this.tickCount,
+      input,
+      grid: this.grid,
+    };
     for (const system of this.systems) system.update(ctx, dt);
 
     this.events.flush();
