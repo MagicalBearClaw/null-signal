@@ -1,0 +1,106 @@
+import GUI from 'lil-gui';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import type { Stage } from '../render/bootScene';
+import { DebugDraw } from '../render/debug/debugDraw';
+import type { Grid } from '../sim/grid/grid';
+import type { Level } from '../sim/level/model';
+import type { Sim } from '../sim/sim';
+
+/**
+ * Development tools: a lil-gui panel with frame/sim stats, debug-draw toggles, a level
+ * switcher and a free camera.
+ *
+ * Only ever loaded through `import.meta.env.DEV`-guarded dynamic import in `main.ts`, so
+ * this module, lil-gui and the debug renderer are absent from production bundles.
+ */
+
+export interface DevToolsHost {
+  readonly sim: Sim;
+  readonly stage: Stage;
+  readonly levelIds: readonly string[];
+  readonly currentLevelId: string;
+  /** Loads a level by id and returns it with its fresh grid. */
+  selectLevel(id: string): { level: Level; grid: Grid };
+}
+
+export interface DevTools {
+  /** Report how long one `sim.step` took. */
+  recordStep(ms: number): void;
+  /** Call right before each render, so overlays match the frame being drawn. */
+  beforeRender(): void;
+  /** Call when a level was (re)loaded from outside the panel. */
+  levelLoaded(level: Level, grid: Grid): void;
+}
+
+export function installDevTools(host: DevToolsHost): DevTools {
+  const { sim, stage } = host;
+  const draw = new DebugDraw();
+  stage.scene.add(draw.root);
+
+  const stats = { fps: 0, simMs: 0, entities: 0 };
+  const settings = { level: host.currentLevelId, freeCamera: false };
+
+  const gui = new GUI({ title: 'NULL SIGNAL dev' });
+  const s = gui.addFolder('Stats');
+  s.add(stats, 'fps').listen().disable();
+  s.add(stats, 'simMs').name('sim tick (ms)').listen().disable();
+  s.add(stats, 'entities').listen().disable();
+
+  const d = gui.addFolder('Draw');
+  d.add(draw.layers, 'grid');
+  d.add(draw.layers, 'colliders').name('collision boxes');
+  d.add(draw.layers, 'vision').name('vision cones');
+  d.add(draw.layers, 'patrols').name('patrol paths');
+
+  const controls = new OrbitControls(stage.camera, stage.canvas);
+  controls.enabled = false;
+  let current: Level | null = null;
+
+  const reframe = () => {
+    if (!current) return;
+    stage.frame(current.width, current.depth);
+    controls.target.set(current.width / 2, 0, current.depth / 2);
+    controls.update();
+  };
+
+  const w = gui.addFolder('World');
+  w.add(settings, 'level', [...host.levelIds]).onChange((id: string) => {
+    const { level, grid } = host.selectLevel(id);
+    levelLoaded(level, grid);
+  });
+  w.add(settings, 'freeCamera')
+    .name('free camera')
+    .onChange((on: boolean) => {
+      controls.enabled = on;
+      if (!on) reframe();
+    });
+
+  function levelLoaded(level: Level, grid: Grid): void {
+    current = level;
+    settings.level = level.name;
+    draw.setLevel(level, grid);
+    if (!controls.enabled) reframe();
+  }
+
+  let frames = 0;
+  let windowStart = performance.now();
+
+  return {
+    recordStep(ms) {
+      stats.simMs = Math.round((stats.simMs * 0.9 + ms * 0.1) * 1000) / 1000;
+    },
+    beforeRender() {
+      draw.update(sim.world);
+      if (controls.enabled) controls.update();
+      frames++;
+      const now = performance.now();
+      if (now - windowStart >= 500) {
+        stats.fps = Math.round((frames * 1000) / (now - windowStart));
+        stats.entities = sim.world.size;
+        frames = 0;
+        windowStart = now;
+      }
+    },
+    levelLoaded,
+  };
+}
