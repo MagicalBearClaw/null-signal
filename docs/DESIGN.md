@@ -56,7 +56,7 @@ The scene graph is the same in both modes; only materials and post passes differ
 
 Tile semantics (wall, low wall, crawlspace, vent, door, floor types) are separate from visuals. A level declares its theme.
 
-- **Sim Grid** (M1): glowing wireframe VR blocks.
+- **Sim Grid** (M1): glowing wireframe VR blocks. Procedural shaders in `src/render/themes/simGrid.ts`, with no textures or third-party assets. A `Theme` maps each tile kind to geometry and a material, and the level view draws one instanced mesh per kind.
 - **Facility** (M5): cool teal industrial interior.
 
 ### 3.4 HUD (original visual design, restyled per render mode)

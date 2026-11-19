@@ -14,7 +14,7 @@ export interface Stage {
 
 /**
  * Temporary stage: renderer, scene and camera in the Sim Grid palette. The camera is
- * driven by `CameraController`; the theme renderer (MIC-71) replaces the rest.
+ * driven by `CameraController`; the level theme sets the background on level load.
  */
 export function createBootStage(root: HTMLElement): Stage {
   const renderer = new THREE.WebGLRenderer({ antialias: true });

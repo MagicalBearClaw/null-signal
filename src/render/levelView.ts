@@ -1,85 +1,67 @@
 import * as THREE from 'three';
-import type { Tile } from '../sim/grid/tiles';
+import { TILES, type Tile } from '../sim/grid/tiles';
 import type { Level } from '../sim/level/model';
+import { createTheme, type Theme } from './themes/theme';
 
-/**
- * Placeholder level geometry in the Sim Grid palette: one box per solid tile, with
- * glowing edges. The theme renderer (MIC-71) replaces this; it exists so levels are
- * visible (and walkable) before then.
- */
+/** The parts of a level the view needs. */
+export type LevelLayout = Pick<Level, 'width' | 'depth' | 'tiles' | 'theme'>;
 
-interface TileStyle {
-  /** Bottom and top of the box, in world units. */
-  readonly y0: number;
-  readonly y1: number;
-  readonly fill: number;
-  readonly edge: number;
+export interface LevelView {
+  readonly root: THREE.Group;
+  readonly theme: Theme;
+  /** Animates the theme. `time` is in seconds. */
+  update(time: number): void;
+  /** Frees everything the view and its theme created and detaches the root. */
+  dispose(): void;
 }
 
-const STYLES: Partial<Record<Tile, TileStyle>> = {
-  wall: { y0: 0, y1: 1.2, fill: 0x0a2a25, edge: 0x1de9b6 },
-  lowWall: { y0: 0, y1: 0.5, fill: 0x0a2a25, edge: 0x128f70 },
-  crawlspace: { y0: 0.45, y1: 0.55, fill: 0x101c33, edge: 0x3a5a9e },
-  vent: { y0: 0, y1: 0.6, fill: 0x1b1033, edge: 0x6a3a9e },
-  door: { y0: 0, y1: 1.2, fill: 0x2e2408, edge: 0xe9b61d },
-  electrified: { y0: 0, y1: 0.02, fill: 0x3a0f08, edge: 0xe93d1d },
-};
-
-export function createLevelView(level: Level): THREE.Group {
+/**
+ * Builds level geometry from tile semantics with the level's theme: the theme's floor,
+ * then one `InstancedMesh` per tile kind present. Draw calls scale with the number of
+ * tile kinds (at most 8), not with the map size.
+ */
+export function createLevelView(level: LevelLayout, theme: Theme = createTheme(level.theme)): LevelView {
   const root = new THREE.Group();
   root.name = 'level';
+  root.add(theme.floor(level.width, level.depth));
 
-  // Floor plane and tile lines.
-  const floor = new THREE.Mesh(
-    new THREE.PlaneGeometry(level.width, level.depth),
-    new THREE.MeshBasicMaterial({ color: 0x07110f }),
-  );
-  floor.rotation.x = -Math.PI / 2;
-  floor.position.set(level.width / 2, 0, level.depth / 2);
-  root.add(floor);
-  root.add(gridLines(level.width, level.depth, 0.001, 0x0b3b33));
-
-  // Group tiles by kind so each kind shares one geometry and two materials.
   const byKind = new Map<Tile, number[]>();
   level.tiles.forEach((t, i) => {
-    if (!STYLES[t]) return;
-    const list = byKind.get(t) ?? [];
-    list.push(i);
-    byKind.set(t, list);
+    const list = byKind.get(t);
+    if (list) list.push(i);
+    else byKind.set(t, [i]);
   });
 
-  const edgeGeom = new THREE.EdgesGeometry(new THREE.BoxGeometry(1, 1, 1));
-  const edgeSource = edgeGeom.getAttribute('position');
-  for (const [kind, indices] of byKind) {
-    const s = STYLES[kind];
-    if (!s) continue;
-    const h = s.y1 - s.y0;
-
-    const fill = new THREE.InstancedMesh(
-      new THREE.BoxGeometry(1, h, 1),
-      new THREE.MeshBasicMaterial({ color: s.fill }),
-      indices.length,
-    );
-    const m = new THREE.Matrix4();
-    const edges: number[] = [];
+  const m = new THREE.Matrix4();
+  for (const kind of TILES) {
+    const indices = byKind.get(kind);
+    const look = indices && theme.tile(kind);
+    if (!indices || !look) continue;
+    const mesh = new THREE.InstancedMesh(look.geometry, look.material, indices.length);
     indices.forEach((idx, n) => {
-      const x = (idx % level.width) + 0.5;
-      const z = Math.floor(idx / level.width) + 0.5;
-      const y = s.y0 + h / 2;
-      fill.setMatrixAt(n, m.makeTranslation(x, y, z));
-      for (let v = 0; v < edgeSource.count; v++) {
-        edges.push(edgeSource.getX(v) + x, edgeSource.getY(v) * h + y, edgeSource.getZ(v) + z);
-      }
+      mesh.setMatrixAt(
+        n,
+        m.makeTranslation((idx % level.width) + 0.5, 0, Math.floor(idx / level.width) + 0.5),
+      );
     });
-    fill.name = kind;
-    root.add(fill);
-
-    const lineGeom = new THREE.BufferGeometry();
-    lineGeom.setAttribute('position', new THREE.Float32BufferAttribute(edges, 3));
-    root.add(new THREE.LineSegments(lineGeom, new THREE.LineBasicMaterial({ color: s.edge })));
+    mesh.computeBoundingSphere();
+    mesh.name = kind;
+    root.add(mesh);
   }
-  edgeGeom.dispose();
-  return root;
+
+  return {
+    root,
+    theme,
+    update: (time) => theme.update(time),
+    dispose() {
+      // Geometry and materials belong to the theme; instanced meshes only own their matrices.
+      root.traverse((o) => {
+        if (o instanceof THREE.InstancedMesh) o.dispose();
+      });
+      theme.dispose();
+      root.removeFromParent();
+    },
+  };
 }
 
 /** Lines along every tile boundary of a width × depth grid, at height y. */
@@ -92,14 +74,14 @@ export function gridLines(width: number, depth: number, y: number, color: number
   return new THREE.LineSegments(geom, new THREE.LineBasicMaterial({ color }));
 }
 
-/** Frees GPU resources of a view built by {@link createLevelView}. */
-export function disposeLevelView(view: THREE.Object3D): void {
-  view.traverse((o) => {
+/** Frees the geometry and materials of every mesh and line under `object`, then detaches it. */
+export function disposeObject(object: THREE.Object3D): void {
+  object.traverse((o) => {
     if (o instanceof THREE.Mesh || o instanceof THREE.LineSegments) {
       o.geometry.dispose();
       const mats: THREE.Material[] = Array.isArray(o.material) ? o.material : [o.material];
       for (const mat of mats) mat.dispose();
     }
   });
-  view.removeFromParent();
+  object.removeFromParent();
 }

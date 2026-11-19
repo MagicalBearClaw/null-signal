@@ -4,7 +4,7 @@ import type { Entity } from '../../sim/components';
 import type { Grid } from '../../sim/grid/grid';
 import { sightMask, type Tile } from '../../sim/grid/tiles';
 import type { Level } from '../../sim/level/model';
-import { disposeLevelView, gridLines } from '../levelView';
+import { disposeObject, gridLines } from '../levelView';
 import { visionFan } from './visionFan';
 
 /**
@@ -73,7 +73,7 @@ export class DebugDraw {
   setLevel(level: Level, grid: Grid): void {
     this.level = level;
     this.grid = grid;
-    for (const layer of [this.gridLayer, this.patrolLayer]) if (layer) disposeLevelView(layer);
+    for (const layer of [this.gridLayer, this.patrolLayer]) if (layer) disposeObject(layer);
     this.gridLayer = buildGridLayer(level);
     this.patrolLayer = buildPatrolLayer(level);
     this.root.add(this.gridLayer, this.patrolLayer);
@@ -90,7 +90,7 @@ export class DebugDraw {
   }
 
   dispose(): void {
-    disposeLevelView(this.root);
+    disposeObject(this.root);
   }
 
   private updateColliders(world: World<Entity>): void {

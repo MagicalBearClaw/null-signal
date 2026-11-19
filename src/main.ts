@@ -13,8 +13,8 @@ import {
   type OverheadSettings,
 } from './render/camera/cameraController';
 import { EntityViewSync } from './render/entityViews';
-import type { Object3D } from 'three';
-import { createLevelView, disposeLevelView } from './render/levelView';
+import { Color } from 'three';
+import { createLevelView, type LevelView } from './render/levelView';
 import { startLevel } from './sim/level/spawn';
 import { Sim } from './sim/sim';
 import { footstepSystem } from './sim/systems/footsteps';
@@ -35,18 +35,19 @@ const bindings = DEFAULT_BINDINGS; // Settings will load saved bindings here.
 const camera = new CameraController();
 let cameraDefault: OverheadSettings = { pitch: 60, distance: 10 };
 let cameraZones: CameraZone[] = [];
-let levelView: Object3D | null = null;
+let levelView: LevelView | null = null;
 let dev: DevTools | null = null;
 
-/** Starts a level by id: fresh sim state, fresh placeholder geometry, camera snapped to the player. */
+/** Starts a level by id: fresh sim state, fresh themed geometry, camera snapped to the player. */
 function selectLevel(id: string) {
   const entry = LEVELS.find((l) => l.id === id);
   if (!entry) throw new Error(`Unknown level "${id}"`);
   const level = entry.load();
   startLevel(sim, level);
-  if (levelView) disposeLevelView(levelView);
+  levelView?.dispose();
   levelView = createLevelView(level);
-  stage.scene.add(levelView);
+  stage.scene.add(levelView.root);
+  stage.scene.background = new Color(levelView.theme.background);
   cameraDefault = level.camera;
   cameraZones = level.cameraZones.map((zn) => ({ ...zn, settings: zn.framing }));
   camera.snap();
@@ -84,6 +85,7 @@ const loop = new GameLoop(
   },
   (alpha) => {
     views.sync(alpha);
+    levelView?.update(performance.now() / 1000);
     followPlayer();
     dev?.beforeRender();
     stage.render();
