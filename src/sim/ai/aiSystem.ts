@@ -22,6 +22,8 @@ export function createAiSystem({ sensors, decision, actions }: AiSystemConfig): 
     const ai = agent.ai;
     ai.state = state;
     ai.memory = {};
+    ai.path = [];
+    ai.pathGoal = null;
     ai.status = 'running';
     ai.blackboard.facts.actionDone = false;
     actions[decision.actionOf(state)].start(agent, ctx);

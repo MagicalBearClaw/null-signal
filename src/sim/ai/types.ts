@@ -1,5 +1,6 @@
 import type { Entity, Transform, Velocity } from '../components';
 import type { Vec2 } from '../events';
+import { DEFAULT_PATROL_STYLE, type PatrolStyle } from '../level/model';
 import type { SimContext } from '../sim';
 import { createBlackboard, type Blackboard, type Condition, type Facts } from './blackboard';
 
@@ -17,17 +18,28 @@ export interface AiState {
   memory: Record<string, number>;
   /** Patrol waypoints in order (loops). Empty: the guard holds `post`. */
   route: readonly Vec2[];
+  patrolStyle: PatrolStyle;
   post: { x: number; z: number; yaw: number };
+  /** Remaining waypoints toward `pathGoal` (from A*), cleared when an action starts. */
+  path: Vec2[];
+  pathGoal: Vec2 | null;
 }
 
-export function createAiState(route: readonly Vec2[], post: AiState['post']): AiState {
+export function createAiState(
+  route: readonly Vec2[],
+  post: AiState['post'],
+  patrolStyle: PatrolStyle = DEFAULT_PATROL_STYLE,
+): AiState {
   return {
     blackboard: createBlackboard(),
     state: null,
     status: 'running',
     memory: {},
     route: route.map((p) => ({ ...p })),
+    patrolStyle: { ...patrolStyle },
     post: { ...post },
+    path: [],
+    pathGoal: null,
   };
 }
 

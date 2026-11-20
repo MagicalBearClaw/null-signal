@@ -67,7 +67,23 @@
       ],
       "color": "#ffe9a01d",
       "drawFill": false,
-      "members": []
+      "members": [
+            {
+                "name": "lookAround",
+                "type": "bool",
+                "value": false
+            },
+            {
+                "name": "mode",
+                "type": "string",
+                "value": "loop"
+            },
+            {
+                "name": "wait",
+                "type": "float",
+                "value": 0
+            }
+        ]
     },
     {
       "id": 5,

@@ -78,6 +78,26 @@ describe('loadLevel: fixture map', () => {
     ]);
   });
 
+  it('defaults the patrol style to a loop with no waiting', () => {
+    expect(level.guards[0]?.patrolStyle).toEqual({ mode: 'loop', wait: 0, lookAround: false });
+  });
+
+  it('reads patrol mode, wait and lookAround from the patrol object', () => {
+    const m = fixture();
+    objectById(m, 4).properties = [
+      { name: 'mode', type: 'string', value: 'pingpong' },
+      { name: 'wait', type: 'float', value: 1.5 },
+      { name: 'lookAround', type: 'bool', value: true },
+    ];
+    expect(load(m).guards[0]?.patrolStyle).toEqual({ mode: 'pingpong', wait: 1.5, lookAround: true });
+  });
+
+  it('rejects an unknown patrol mode', () => {
+    const m = fixture();
+    objectById(m, 4).properties = [{ name: 'mode', type: 'string', value: 'zigzag' }];
+    expect(() => load(m)).toThrow(/mode/);
+  });
+
   it('reads sweepers with explicit and default properties', () => {
     expect(level.cameras[0]).toMatchObject({ id: 5, range: 5 });
     expect(level.cameras[0]?.sweep).toBeCloseTo(Math.PI / 3);
