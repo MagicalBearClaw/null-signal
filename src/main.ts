@@ -16,6 +16,7 @@ import { EntityViewSync } from './render/entityViews';
 import { Color } from 'three';
 import { createLevelView, type LevelView } from './render/levelView';
 import { GUARD_ACTIONS } from './sim/ai/actions';
+import { alertSystem } from './sim/ai/alert';
 import { createAiSystem } from './sim/ai/aiSystem';
 import { createGuardBrain } from './sim/ai/guardBrain';
 import { createVisionSensor } from './sim/ai/visionSensor';
@@ -33,7 +34,7 @@ const guardAi = createAiSystem({
   decision: createGuardBrain(),
   actions: GUARD_ACTIONS,
 });
-const sim = new Sim([playerInputSystem, guardAi, movementSystem, footstepSystem]);
+const sim = new Sim([playerInputSystem, guardAi, alertSystem, movementSystem, footstepSystem]);
 const stage = createBootStage(root);
 const views = new EntityViewSync(sim.world, stage.scene, { player: playerView, guard: guardView });
 
