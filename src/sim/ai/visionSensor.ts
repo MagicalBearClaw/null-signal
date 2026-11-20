@@ -22,7 +22,7 @@ export function createVisionSensor(): Sensor {
     sense(agent, ctx, dt) {
       const bb = agent.ai.blackboard;
       const cone = agent.vision;
-      const player = ctx.world.with('player', 'transform').first;
+      const player = ctx.world.with('player', 'transform').without('dead').first;
       if (!cone || !player) {
         bb.facts.seesPlayer = false;
         bb.facts.playerInRange = false;

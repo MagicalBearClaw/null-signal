@@ -22,6 +22,7 @@ export type SimEvent =
   | { type: 'damage'; target: number; amount: number; lethal: boolean; source?: number }
   | { type: 'kill'; target: number; source?: number }
   | { type: 'ko'; target: number; source?: number }
+  | { type: 'playerDied' }
   | { type: 'pickup'; entity: number; item: string }
   | { type: 'itemUsed'; item: string }
   | { type: 'ammoUsed'; weapon: string; amount: number };

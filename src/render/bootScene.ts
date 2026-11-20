@@ -88,6 +88,7 @@ export const playerView: ViewFactory = () => {
   body.add(visor);
   return withUpdate(body, (e) => {
     body.scale.y = (e.collider?.height ?? PLAYER_STAND_HEIGHT) / PLAYER_STAND_HEIGHT;
+    body.rotation.x = e.dead ? -Math.PI / 2 : 0; // fallen over
   });
 };
 
