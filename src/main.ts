@@ -20,11 +20,13 @@ import { alertSystem } from './sim/ai/alert';
 import { createAiSystem } from './sim/ai/aiSystem';
 import { createGuardBrain } from './sim/ai/guardBrain';
 import { createVisionSensor } from './sim/ai/visionSensor';
+import { healthSystem } from './sim/combat/health';
 import { startLevel } from './sim/level/spawn';
 import { Sim } from './sim/sim';
 import { footstepSystem } from './sim/systems/footsteps';
 import { movementSystem } from './sim/systems/movement';
 import { playerInputSystem } from './sim/systems/playerInput';
+import { createGameOverOverlay } from './ui/gameOver';
 
 const root = document.getElementById('app');
 if (!root) throw new Error('#app element missing from index.html');
@@ -34,7 +36,7 @@ const guardAi = createAiSystem({
   decision: createGuardBrain(),
   actions: GUARD_ACTIONS,
 });
-const sim = new Sim([playerInputSystem, guardAi, alertSystem, movementSystem, footstepSystem]);
+const sim = new Sim([healthSystem, playerInputSystem, guardAi, alertSystem, movementSystem, footstepSystem]);
 const stage = createBootStage(root);
 const views = new EntityViewSync(sim.world, stage.scene, { player: playerView, guard: guardView });
 
@@ -47,12 +49,17 @@ let cameraDefault: OverheadSettings = { pitch: 60, distance: 10 };
 let cameraZones: CameraZone[] = [];
 let levelView: LevelView | null = null;
 let dev: DevTools | null = null;
+let currentLevelId = '';
+/** Times the current level was continued after a death (for the rating). */
+let continues = 0;
 
 /** Starts a level by id: fresh sim state, fresh themed geometry, camera snapped to the player. */
 function selectLevel(id: string) {
   const entry = LEVELS.find((l) => l.id === id);
   if (!entry) throw new Error(`Unknown level "${id}"`);
   const level = entry.load();
+  if (id !== currentLevelId) continues = 0;
+  currentLevelId = id;
   startLevel(sim, level);
   levelView?.dispose();
   levelView = createLevelView(level);
@@ -101,6 +108,30 @@ const loop = new GameLoop(
     stage.render();
   },
 );
+
+// Death: freeze the level and offer Continue (restart, counted) or Exit.
+const gameOver = createGameOverOverlay(root, {
+  onContinue() {
+    continues++;
+    restart(currentLevelId);
+  },
+  onExit() {
+    // The main menu arrives with MIC-86; until then Exit starts the first level fresh.
+    currentLevelId = '';
+    restart(first.id);
+  },
+});
+/** Reloads a level after the overlay closes and lets the sim run again. */
+function restart(id: string): void {
+  const { level, grid } = selectLevel(id);
+  dev?.levelLoaded(level, grid);
+  input.clear();
+  loop.resume();
+}
+sim.events.on('playerDied', () => {
+  loop.pause();
+  gameOver.show(continues);
+});
 
 // Don't simulate time spent in a background tab, and drop keys held while it was hidden.
 // Clearing the devices (not the tracker) lets the sim see proper `released` edges.

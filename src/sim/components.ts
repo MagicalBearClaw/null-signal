@@ -45,6 +45,16 @@ export interface Locomotion {
   travelled: number;
 }
 
+/** Hit points. Damage goes through `applyDamage` (src/sim/combat/health.ts). */
+export interface Health {
+  current: number;
+  max: number;
+  /** Seconds of invulnerability left after the last hit. */
+  invulnerable: number;
+  /** Length of the invulnerability window each hit grants. */
+  invulnerableFor: number;
+}
+
 /** Tells the render layer which view to build. The sim never reads it. */
 export interface Renderable {
   kind: string;
@@ -65,6 +75,7 @@ export interface Entity {
   /** Body posture. Sensors read it (low targets are harder to see), movement uses it for tile blocking. */
   stance?: Stance;
   locomotion?: Locomotion;
+  health?: Health;
   renderable?: Renderable;
   /** View cone (guards, cameras). See src/sim/ai/vision.ts. */
   vision?: VisionCone;
@@ -74,6 +85,8 @@ export interface Entity {
   // ── Tags (presence-only) ──────────────────────────────
   player?: true;
   guard?: true;
+  /** Out of the fight: stops moving, sensing and being sensed. */
+  dead?: true;
 }
 
 export function transform(x = 0, z = 0, yaw = 0, y = 0): Transform {

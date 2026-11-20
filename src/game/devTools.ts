@@ -3,13 +3,14 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { Stage } from '../render/bootScene';
 import type { CameraController } from '../render/camera/cameraController';
 import { DebugDraw } from '../render/debug/debugDraw';
+import { applyDamage } from '../sim/combat/health';
 import type { Grid } from '../sim/grid/grid';
 import type { Level } from '../sim/level/model';
 import type { Sim } from '../sim/sim';
 
 /**
  * Development tools: a lil-gui panel with frame/sim stats, debug-draw toggles, a level
- * switcher and a free camera.
+ * switcher, a free camera and player damage buttons.
  *
  * Only ever loaded through `import.meta.env.DEV`-guarded dynamic import in `main.ts`, so
  * this module, lil-gui and the debug renderer are absent from production bundles.
@@ -78,6 +79,18 @@ export function installDevTools(host: DevToolsHost): DevTools {
       }
     });
 
+  // Player: damage buttons for testing the death flow before anything can shoot.
+  const playerOf = () => sim.world.with('player', 'health').first;
+  const hp = { health: 0 };
+  const p = gui.addFolder('Player');
+  p.add(hp, 'health').listen().disable();
+  p.add({ hurt: () => hurt(25) }, 'hurt').name('take 25 damage');
+  p.add({ kill: () => hurt(Infinity) }, 'kill').name('kill player');
+  function hurt(amount: number): void {
+    const player = playerOf();
+    if (player) applyDamage(sim.world, sim.events, player, Math.min(amount, player.health.current));
+  }
+
   function levelLoaded(level: Level, grid: Grid): void {
     settings.level = level.name;
     draw.setLevel(level, grid);
@@ -98,6 +111,7 @@ export function installDevTools(host: DevToolsHost): DevTools {
       if (now - windowStart >= 500) {
         stats.fps = Math.round((frames * 1000) / (now - windowStart));
         stats.entities = sim.world.size;
+        hp.health = playerOf()?.health.current ?? 0;
         frames = 0;
         windowStart = now;
       }

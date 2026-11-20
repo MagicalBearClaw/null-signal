@@ -1,5 +1,6 @@
 import { GUARD } from '../ai/tuning';
 import { createAiState } from '../ai/types';
+import { createHealth } from '../combat/health';
 import { transform, type Collider } from '../components';
 import { PLAYER } from '../player/tuning';
 import type { Sim } from '../sim';
@@ -29,6 +30,7 @@ export function startLevel(sim: Sim, level: Level): void {
     collider: { ...PLAYER_COLLIDER },
     stance: 'stand',
     locomotion: { running: false, travelled: 0 },
+    health: { ...createHealth(PLAYER.health.max), invulnerableFor: PLAYER.health.invulnerableFor },
     renderable: { kind: 'player' },
     player: true,
   });

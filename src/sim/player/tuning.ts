@@ -18,6 +18,11 @@ export const PLAYER = {
     standHeight: 1.6,
     crouchHeight: 0.9,
   },
+  health: {
+    max: 100,
+    /** Seconds of invulnerability after taking a hit. */
+    invulnerableFor: 1,
+  },
   footsteps: {
     /** Distance between footstep noises while running. */
     stride: 1.4,

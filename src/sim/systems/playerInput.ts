@@ -44,7 +44,7 @@ function nextStance(e: Entity & { stance: Stance }, grid: Grid | null, crouchPre
 export const playerInputSystem: System = {
   name: 'playerInput',
   update({ world, input, grid }, dt) {
-    for (const e of world.with('player', 'velocity', 'transform', 'stance')) {
+    for (const e of world.with('player', 'velocity', 'transform', 'stance').without('dead')) {
       const stance = nextStance(e, grid, input.pressed.has('crouch'));
       if (stance !== e.stance) {
         e.stance = stance;
