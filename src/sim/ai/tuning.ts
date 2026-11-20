@@ -14,6 +14,12 @@ export const GUARD = {
     lookTime: 3,
     lookTurnRate: 1.5,
   },
+  patrol: {
+    /** Half-width of the gaze sweep while waiting at a waypoint with lookAround. */
+    lookArc: 1,
+    /** Seconds for one full left-right-left sweep. */
+    lookPeriod: 3,
+  },
   search: {
     /** Search points are this far from the last known player position. */
     radius: 3,

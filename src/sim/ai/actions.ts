@@ -1,12 +1,15 @@
 import type { Vec2 } from '../events';
+import type { Grid } from '../grid/grid';
+import { stanceMask } from '../grid/tiles';
+import type { PatrolMode } from '../level/model';
 import { turnToward, yawOf } from '../systems/playerInput';
+import { findPath, type PathBox } from './pathfinding';
 import { GUARD } from './tuning';
 import type { Action, ActionName, ActionStatus, Agent } from './types';
 
 /*
- * The six v1 guard actions. Movement is straight-line steering toward a point; the
- * movement system applies the velocity with collision. Grid pathfinding replaces the
- * steering in MIC-76 without changing these interfaces.
+ * The six v1 guard actions. Movement goes through `navigateTo` (A* on the level grid,
+ * then steering along the path); the movement system applies the velocity with collision.
  */
 
 function stop(agent: Agent): void {
@@ -53,6 +56,38 @@ export function moveTo(agent: Agent, target: Vec2, speed: number, dt: number): b
   return false;
 }
 
+const DEFAULT_BOX: PathBox = { halfWidth: 0.3, halfDepth: 0.3 };
+
+/**
+ * Walks to `target` around walls: plans an A* path on the level grid (re-planned when the
+ * target moves) and steers along it with `moveTo`. Without a grid, or when no path exists,
+ * it falls back to a straight line, which `moveTo`'s stuck check eventually gives up on.
+ * Returns true on arrival at `target`.
+ */
+export function navigateTo(
+  agent: Agent,
+  target: Vec2,
+  speed: number,
+  dt: number,
+  grid: Grid | null,
+): boolean {
+  const ai = agent.ai;
+  const goal = ai.pathGoal;
+  if (!goal || Math.hypot(goal.x - target.x, goal.z - target.z) > 0.25) {
+    const box = agent.collider ?? DEFAULT_BOX;
+    const from = { x: agent.transform.x, z: agent.transform.z };
+    ai.path = (grid && findPath(grid, from, target, stanceMask('stand'), box)) ?? [{ ...target }];
+    ai.pathGoal = { ...target };
+  }
+  while (ai.path.length > 0) {
+    const next = ai.path[0] as Vec2;
+    if (!moveTo(agent, next, speed, dt)) return false;
+    ai.path.shift(); // reached this corner; steer toward the next one in the same tick
+  }
+  ai.pathGoal = null;
+  return true;
+}
+
 function nearestWaypoint(agent: Agent): number {
   const { route } = agent.ai;
   let best = 0;
@@ -74,29 +109,71 @@ function face(agent: Agent, target: Vec2, dt: number): void {
 
 const noop = (): void => undefined;
 
-/** Walks the route in a loop (resuming at the nearest waypoint), or holds the post. Never ends. */
+/** Next waypoint index after `i`: wraps for `loop`, reverses at the ends for `pingpong`. */
+export function nextWaypoint(
+  i: number,
+  dir: number,
+  count: number,
+  mode: PatrolMode,
+): { i: number; dir: number } {
+  if (count < 2) return { i: 0, dir: 1 };
+  if (mode === 'loop') return { i: (i + 1) % count, dir: 1 };
+  const d = i + dir < 0 || i + dir >= count ? -dir : dir;
+  return { i: i + d, dir: d };
+}
+
+/**
+ * Walks the route (resuming at the nearest waypoint), waiting `patrolStyle.wait` seconds
+ * at each point and, with `lookAround`, sweeping its gaze while it waits. A guard with no
+ * route holds its post. Never ends.
+ */
 const patrol: Action = {
   name: 'patrol',
   preconditions: { seesPlayer: false, heardNoise: false },
   effects: {},
   start(agent) {
     agent.ai.memory.waypoint = nearestWaypoint(agent);
+    agent.ai.memory.dir = 1;
   },
-  tick(agent, _ctx, dt) {
-    const { route, post, memory } = agent.ai;
+  tick(agent, ctx, dt) {
+    const { route, post, memory, patrolStyle: style } = agent.ai;
     if (route.length === 0) {
-      if (moveTo(agent, post, GUARD.speed.walk, dt)) {
+      if (navigateTo(agent, post, GUARD.speed.walk, dt, ctx.grid)) {
         agent.transform.yaw = turnToward(agent.transform.yaw, post.yaw, GUARD.turnRate * dt);
       }
       return 'running';
     }
-    const i = memory.waypoint ?? 0;
-    const point = route[i % route.length];
-    if (point && moveTo(agent, point, GUARD.speed.walk, dt)) memory.waypoint = (i + 1) % route.length;
+
+    if (memory.waited !== undefined) {
+      memory.waited += dt;
+      if (style.lookAround) {
+        const sweep = Math.sin((memory.waited / GUARD.patrol.lookPeriod) * Math.PI * 2);
+        agent.transform.yaw = (memory.arrivedYaw ?? agent.transform.yaw) + sweep * GUARD.patrol.lookArc;
+      }
+      if (memory.waited < style.wait) return 'running';
+      delete memory.waited;
+      advance(memory, route.length, style.mode);
+    }
+
+    const point = route[memory.waypoint ?? 0];
+    if (point && navigateTo(agent, point, GUARD.speed.walk, dt, ctx.grid)) {
+      if (style.wait > 0) {
+        memory.waited = 0;
+        memory.arrivedYaw = agent.transform.yaw;
+      } else {
+        advance(memory, route.length, style.mode);
+      }
+    }
     return 'running';
   },
   interrupt: stop,
 };
+
+function advance(memory: Record<string, number>, count: number, mode: PatrolMode): void {
+  const next = nextWaypoint(memory.waypoint ?? 0, memory.dir ?? 1, count, mode);
+  memory.waypoint = next.i;
+  memory.dir = next.dir;
+}
 
 /** Walks to the latest noise, looks around, then forgets it. */
 const investigate: Action = {
@@ -104,11 +181,11 @@ const investigate: Action = {
   preconditions: { heardNoise: true },
   effects: { heardNoise: false },
   start: noop,
-  tick(agent, _ctx, dt): ActionStatus {
+  tick(agent, ctx, dt): ActionStatus {
     const { blackboard: bb, memory } = agent.ai;
     if (!bb.noiseAt) return 'failed';
     if (memory.looking === undefined) {
-      if (moveTo(agent, bb.noiseAt, GUARD.speed.walk, dt)) memory.looking = 0;
+      if (navigateTo(agent, bb.noiseAt, GUARD.speed.walk, dt, ctx.grid)) memory.looking = 0;
       return 'running';
     }
     memory.looking += dt;
@@ -129,7 +206,7 @@ const chase: Action = {
   tick(agent, ctx, dt) {
     const target = agent.ai.blackboard.playerSeenAt ?? ctx.squad.lastKnownPlayer;
     if (!target) return 'failed';
-    return moveTo(agent, target, GUARD.speed.run, dt) ? 'done' : 'running';
+    return navigateTo(agent, target, GUARD.speed.run, dt, ctx.grid) ? 'done' : 'running';
   },
   interrupt: stop,
 };
@@ -172,7 +249,8 @@ const search: Action = {
     const offset = SEARCH_OFFSETS[m.point ?? 0];
     if (!offset) return 'done';
     const r = GUARD.search.radius;
-    if (moveTo(agent, { x: centre.x + offset.x * r, z: centre.z + offset.z * r }, GUARD.speed.walk, dt)) {
+    const point = { x: centre.x + offset.x * r, z: centre.z + offset.z * r };
+    if (navigateTo(agent, point, GUARD.speed.walk, dt, ctx.grid)) {
       m.point = (m.point ?? 0) + 1;
     }
     return 'running';
@@ -186,10 +264,10 @@ const returnToRoute: Action = {
   preconditions: { seesPlayer: false },
   effects: {},
   start: noop,
-  tick(agent, _ctx, dt) {
+  tick(agent, ctx, dt) {
     const { route, post } = agent.ai;
     const target = route[nearestWaypoint(agent)] ?? post;
-    return moveTo(agent, target, GUARD.speed.walk, dt) ? 'done' : 'running';
+    return navigateTo(agent, target, GUARD.speed.walk, dt, ctx.grid) ? 'done' : 'running';
   },
   interrupt: stop,
 };

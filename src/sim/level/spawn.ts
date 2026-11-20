@@ -39,7 +39,7 @@ export function startLevel(sim: Sim, level: Level): void {
       collider: { ...GUARD_COLLIDER },
       renderable: { kind: 'guard' },
       guard: true,
-      ai: createAiState(g.patrol, { x: g.x, z: g.z, yaw: g.yaw }),
+      ai: createAiState(g.patrol, { x: g.x, z: g.z, yaw: g.yaw }, g.patrolStyle),
     });
   }
 }

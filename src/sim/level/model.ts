@@ -46,9 +46,25 @@ export interface Placement {
   readonly yaw: number;
 }
 
+export const PATROL_MODES = ['loop', 'pingpong'] as const;
+export type PatrolMode = (typeof PATROL_MODES)[number];
+
+/** How a guard walks its route (Tiled `patrol` object properties). */
+export interface PatrolStyle {
+  /** `loop`: last waypoint back to the first. `pingpong`: walk back along the route. */
+  readonly mode: PatrolMode;
+  /** Seconds to stand at each waypoint. */
+  readonly wait: number;
+  /** Turn and scan while waiting at a waypoint. */
+  readonly lookAround: boolean;
+}
+
+export const DEFAULT_PATROL_STYLE: PatrolStyle = { mode: 'loop', wait: 0, lookAround: false };
+
 export interface GuardDef extends Placement {
-  /** Patrol waypoints in order (the route loops). Empty: the guard stands post. */
+  /** Patrol waypoints in order. Empty: the guard stands post. */
   readonly patrol: readonly Vec2[];
+  readonly patrolStyle: PatrolStyle;
 }
 
 export interface SweeperDef extends Placement {

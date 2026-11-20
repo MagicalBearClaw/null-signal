@@ -3,8 +3,11 @@ import type { Vec2 } from '../events';
 import { TILES, type Tile } from '../grid/tiles';
 import { wrapAngle } from '../math';
 import {
+  DEFAULT_PATROL_STYLE,
   OBJECTIVE_TYPES,
+  PATROL_MODES,
   THEMES,
+  type PatrolStyle,
   type CameraZoneDef,
   type DoorDef,
   type GuardDef,
@@ -149,6 +152,11 @@ const objectRef = z.number().int().positive().optional(); // Tiled "object" prop
 
 const FacingProps = z.object({ facing: degrees(0) });
 const GuardProps = FacingProps.extend({ patrol: objectRef });
+const PatrolProps = z.object({
+  mode: z.enum(PATROL_MODES).default('loop'),
+  wait: z.number().nonnegative().default(0),
+  lookAround: z.boolean().default(false),
+});
 const SweeperProps = (range: number) =>
   FacingProps.extend({
     sweep: z.number().min(0).max(360).default(90),
@@ -301,15 +309,17 @@ export function loadLevel(
         const at = position(o, ctx);
         if (!p || !at) break;
         let patrol: Vec2[] = [];
+        let patrolStyle: PatrolStyle = DEFAULT_PATROL_STYLE;
         if (p.patrol !== undefined) {
           const route = byId.get(p.patrol);
           if (!route || kindOf(route) !== 'patrol' || !route.polyline) {
             issues.push(`${where}: "patrol" must reference a patrol polyline (got object ${p.patrol})`);
           } else {
             patrol = polyline(route, ctx) ?? [];
+            patrolStyle = parseProps(PatrolProps, route, ctx) ?? DEFAULT_PATROL_STYLE;
           }
         }
-        guards.push({ id: o.id, ...at, yaw: facingToYaw(p.facing), patrol });
+        guards.push({ id: o.id, ...at, yaw: facingToYaw(p.facing), patrol, patrolStyle });
         break;
       }
       case 'patrol': {
