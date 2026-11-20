@@ -1,4 +1,5 @@
 import type { AlertState, Vec2 } from '../events';
+import { createAlertMachine, type AlertMachine } from './alert';
 
 /**
  * Boolean facts the decision layer reads. Conditions are written as partial fact sets
@@ -46,7 +47,9 @@ export interface Blackboard {
 
 /** State every guard shares: the global alert level and the last known player position. */
 export interface SquadBlackboard {
+  /** Current level alert state; mirrors `machine.state` (written by `alertSystem`). */
   alert: AlertState;
+  machine: AlertMachine;
   lastKnownPlayer: Vec2 | null;
   /** Sim tick at which `lastKnownPlayer` was written (-1 when never). */
   lastKnownTick: number;
@@ -58,7 +61,7 @@ export function createBlackboard(): Blackboard {
 }
 
 export function createSquad(): SquadBlackboard {
-  return { alert: 'normal', lastKnownPlayer: null, lastKnownTick: -1 };
+  return { alert: 'normal', machine: createAlertMachine(), lastKnownPlayer: null, lastKnownTick: -1 };
 }
 
 /** Facts derived from blackboard data rather than sensed directly. */

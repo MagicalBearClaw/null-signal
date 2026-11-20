@@ -197,14 +197,17 @@ const investigate: Action = {
   interrupt: stop,
 };
 
-/** Runs to where the player was last seen (by this guard, else by the squad). */
+/** Runs to where the player is (if seen) or was last reported by the squad. */
 const chase: Action = {
   name: 'chase',
   preconditions: {},
   effects: { seesPlayer: true },
   start: noop,
   tick(agent, ctx, dt) {
-    const target = agent.ai.blackboard.playerSeenAt ?? ctx.squad.lastKnownPlayer;
+    // own eyes while they see the player; otherwise the squad's freshest report
+    const bb = agent.ai.blackboard;
+    const target =
+      (bb.facts.seesPlayer ? bb.playerSeenAt : null) ?? ctx.squad.lastKnownPlayer ?? bb.playerSeenAt;
     if (!target) return 'failed';
     return navigateTo(agent, target, GUARD.speed.run, dt, ctx.grid) ? 'done' : 'running';
   },
