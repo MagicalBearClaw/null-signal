@@ -18,6 +18,7 @@ import { createLevelView, type LevelView } from './render/levelView';
 import { GUARD_ACTIONS } from './sim/ai/actions';
 import { createAiSystem } from './sim/ai/aiSystem';
 import { createGuardBrain } from './sim/ai/guardBrain';
+import { createVisionSensor } from './sim/ai/visionSensor';
 import { startLevel } from './sim/level/spawn';
 import { Sim } from './sim/sim';
 import { footstepSystem } from './sim/systems/footsteps';
@@ -27,8 +28,11 @@ import { playerInputSystem } from './sim/systems/playerInput';
 const root = document.getElementById('app');
 if (!root) throw new Error('#app element missing from index.html');
 
-// Sensors arrive with vision and hearing (MIC-77); until then guards patrol.
-const guardAi = createAiSystem({ sensors: [], decision: createGuardBrain(), actions: GUARD_ACTIONS });
+const guardAi = createAiSystem({
+  sensors: [createVisionSensor()],
+  decision: createGuardBrain(),
+  actions: GUARD_ACTIONS,
+});
 const sim = new Sim([playerInputSystem, guardAi, movementSystem, footstepSystem]);
 const stage = createBootStage(root);
 const views = new EntityViewSync(sim.world, stage.scene, { player: playerView, guard: guardView });

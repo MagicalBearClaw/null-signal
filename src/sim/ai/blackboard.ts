@@ -40,6 +40,8 @@ export interface Blackboard {
   playerSeenAt: Vec2 | null;
   /** The noise to investigate next. Cleared by the investigate action once checked. */
   noiseAt: Vec2 | null;
+  /** Vision meter, 0..1. Fills while the player is in view; full means spotted. */
+  awareness: number;
 }
 
 /** State every guard shares: the global alert level and the last known player position. */
@@ -52,7 +54,7 @@ export interface SquadBlackboard {
 
 export function createBlackboard(): Blackboard {
   const facts = Object.fromEntries(FACTS.map((f) => [f, false])) as Facts;
-  return { facts, playerSeenAt: null, noiseAt: null };
+  return { facts, playerSeenAt: null, noiseAt: null, awareness: 0 };
 }
 
 export function createSquad(): SquadBlackboard {

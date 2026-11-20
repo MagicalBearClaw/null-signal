@@ -49,7 +49,7 @@ export type Agent = Entity & { transform: Transform; velocity: Velocity; ai: AiS
 /** Writes facts and data into a guard's blackboard (and the squad's) each tick. */
 export interface Sensor {
   readonly name: string;
-  sense(agent: Agent, ctx: SimContext): void;
+  sense(agent: Agent, ctx: SimContext, dt: number): void;
 }
 
 export type ActionStatus = 'running' | 'done' | 'failed';
