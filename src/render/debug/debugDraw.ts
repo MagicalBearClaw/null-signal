@@ -8,11 +8,10 @@ import { disposeObject, gridLines } from '../levelView';
 import { visionFan } from './visionFan';
 
 /**
- * Placeholder vision tuning, shown by the overlay only. The vision/AI tickets own the
- * real numbers; keep these in sync until then.
+ * Placeholder camera/turret cone angles, shown by the overlay only, until the camera and
+ * turret systems (MIC-80) give those entities a `vision` component. Guards use theirs.
  */
 export const DEBUG_VISION = {
-  guard: { fov: (90 * Math.PI) / 180, range: 6 },
   camera: { fov: (50 * Math.PI) / 180 },
   turret: { fov: (40 * Math.PI) / 180 },
   rays: 48,
@@ -130,8 +129,8 @@ export class DebugDraw {
           if (a && b) tris.push(o.x, Y.vision, o.z, a.x, Y.vision, a.z, b.x, Y.vision, b.z);
         }
       };
-      for (const e of world.with('transform', 'guard')) {
-        fan(e.transform.x, e.transform.z, e.transform.yaw, DEBUG_VISION.guard.fov, DEBUG_VISION.guard.range);
+      for (const e of world.with('transform', 'vision')) {
+        fan(e.transform.x, e.transform.z, e.transform.yaw, e.vision.fov, e.vision.range);
       }
       // Cameras and turrets: show full coverage (sweep arc plus their own view cone).
       for (const c of this.level?.cameras ?? [])

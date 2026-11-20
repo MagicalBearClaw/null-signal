@@ -5,6 +5,15 @@ export const GUARD = {
     run: 4,
   },
   turnRate: 8,
+  /** View cone for guards (`Entity.vision`). */
+  vision: {
+    fov: (90 * Math.PI) / 180,
+    range: 7,
+    /** Awareness at which a half-seen player becomes a spot to investigate. */
+    glimpse: 0.35,
+  },
+  /** Furthest distance a guard opens fire from. */
+  shootRange: 6,
   /** Close enough to a target point to count as arrived. */
   arriveRadius: 0.1,
   /** Giving up on a point after making no progress for this long (blocked by a wall or door). */

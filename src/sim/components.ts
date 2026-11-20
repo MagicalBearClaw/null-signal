@@ -1,4 +1,5 @@
 import type { AiState } from './ai/types';
+import type { VisionCone } from './ai/vision';
 import type { Stance } from './grid/tiles';
 
 /**
@@ -65,6 +66,8 @@ export interface Entity {
   stance?: Stance;
   locomotion?: Locomotion;
   renderable?: Renderable;
+  /** View cone (guards, cameras). See src/sim/ai/vision.ts. */
+  vision?: VisionCone;
   /** Guard brain: blackboard, decision state and action memory (src/sim/ai). */
   ai?: AiState;
 

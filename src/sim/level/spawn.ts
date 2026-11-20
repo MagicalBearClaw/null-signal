@@ -1,3 +1,4 @@
+import { GUARD } from '../ai/tuning';
 import { createAiState } from '../ai/types';
 import { transform, type Collider } from '../components';
 import { PLAYER } from '../player/tuning';
@@ -39,6 +40,7 @@ export function startLevel(sim: Sim, level: Level): void {
       collider: { ...GUARD_COLLIDER },
       renderable: { kind: 'guard' },
       guard: true,
+      vision: { fov: GUARD.vision.fov, range: GUARD.vision.range },
       ai: createAiState(g.patrol, { x: g.x, z: g.z, yaw: g.yaw }, g.patrolStyle),
     });
   }
