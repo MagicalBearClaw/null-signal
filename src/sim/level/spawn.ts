@@ -43,6 +43,7 @@ export function startLevel(sim: Sim, level: Level): void {
       renderable: { kind: 'guard' },
       guard: true,
       vision: { fov: GUARD.vision.fov, range: GUARD.vision.range },
+      health: createHealth(GUARD.health),
       ai: createAiState(g.patrol, { x: g.x, z: g.z, yaw: g.yaw }, g.patrolStyle),
     });
   }

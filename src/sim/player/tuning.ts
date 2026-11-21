@@ -23,6 +23,13 @@ export const PLAYER = {
     /** Seconds of invulnerability after taking a hit. */
     invulnerableFor: 1,
   },
+  /** Debug sidearm until the arsenal lands (M3): accurate, quick, loud. */
+  weapon: {
+    damage: 34,
+    interval: 0.25,
+    range: 12,
+    noiseRadius: 14,
+  },
   footsteps: {
     /** Distance between footstep noises while running. */
     stride: 1.4,

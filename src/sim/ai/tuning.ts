@@ -14,6 +14,22 @@ export const GUARD = {
   },
   /** Furthest distance a guard opens fire from. */
   shootRange: 6,
+  health: 100,
+  combat: {
+    /** Delay before the first shot after deciding to fire. */
+    reaction: 0.5,
+    /** Seconds between shots. */
+    interval: 0.6,
+    damage: 15,
+    /** Bullets travel this far (a little past shootRange). */
+    range: 9,
+    /** Only fire when facing within this angle of the target. */
+    aimTolerance: 0.2,
+    /** Max aim error in radians: `base + perTile * distance` (uniform), so far shots miss more. */
+    spread: { base: 0.03, perTile: 0.025 },
+    /** How far a guard's gunfire carries. */
+    noiseRadius: 14,
+  },
   /** Close enough to a target point to count as arrived. */
   arriveRadius: 0.1,
   /** Giving up on a point after making no progress for this long (blocked by a wall or door). */

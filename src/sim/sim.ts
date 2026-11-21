@@ -4,6 +4,7 @@ import type { Entity } from './components';
 import { EventBus } from './events';
 import type { Grid } from './grid/grid';
 import { EMPTY_INPUT, type InputSnapshot } from './input';
+import { Rng } from './rng';
 
 /** Everything a system may touch during a tick. */
 export interface SimContext {
@@ -17,6 +18,8 @@ export interface SimContext {
   readonly grid: Grid | null;
   /** Shared guard knowledge: alert level, last known player position. */
   readonly squad: SquadBlackboard;
+  /** Seeded randomness; the only source systems may use. */
+  readonly rng: Rng;
 }
 
 export interface System {
@@ -42,6 +45,7 @@ export class Sim {
   /** Set by the level runtime; systems read it through `ctx.grid`. */
   grid: Grid | null = null;
   squad: SquadBlackboard = createSquad();
+  rng = new Rng();
   private readonly systems: readonly System[];
   private tickCount = 0;
 
@@ -60,6 +64,7 @@ export class Sim {
     this.events.clear();
     this.grid = null;
     this.squad = createSquad();
+    this.rng = new Rng();
   }
 
   get tick(): number {
@@ -90,6 +95,7 @@ export class Sim {
       input,
       grid: this.grid,
       squad: this.squad,
+      rng: this.rng,
     };
     for (const system of this.systems) system.update(ctx, dt);
 

@@ -32,7 +32,7 @@ export function createAiSystem({ sensors, decision, actions }: AiSystemConfig): 
   return {
     name: 'ai',
     update(ctx, dt) {
-      for (const agent of ctx.world.with('ai', 'transform', 'velocity')) {
+      for (const agent of ctx.world.with('ai', 'transform', 'velocity').without('dead')) {
         const ai = agent.ai;
         for (const sensor of sensors) sensor.sense(agent, ctx, dt);
         deriveFacts(ai.blackboard, ctx.squad);

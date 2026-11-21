@@ -76,6 +76,8 @@ export interface Entity {
   stance?: Stance;
   locomotion?: Locomotion;
   health?: Health;
+  /** Seconds until the entity's weapon can fire again. */
+  weaponCooldown?: number;
   renderable?: Renderable;
   /** View cone (guards, cameras). See src/sim/ai/vision.ts. */
   vision?: VisionCone;

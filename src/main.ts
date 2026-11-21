@@ -15,12 +15,14 @@ import {
 import { EntityViewSync } from './render/entityViews';
 import { Color } from 'three';
 import { createLevelView, type LevelView } from './render/levelView';
+import { Tracers } from './render/tracers';
 import { GUARD_ACTIONS } from './sim/ai/actions';
 import { alertSystem } from './sim/ai/alert';
 import { createAiSystem } from './sim/ai/aiSystem';
 import { createGuardBrain } from './sim/ai/guardBrain';
 import { createVisionSensor } from './sim/ai/visionSensor';
 import { healthSystem } from './sim/combat/health';
+import { playerWeaponSystem } from './sim/combat/playerWeapon';
 import { startLevel } from './sim/level/spawn';
 import { Sim } from './sim/sim';
 import { footstepSystem } from './sim/systems/footsteps';
@@ -36,9 +38,19 @@ const guardAi = createAiSystem({
   decision: createGuardBrain(),
   actions: GUARD_ACTIONS,
 });
-const sim = new Sim([healthSystem, playerInputSystem, guardAi, alertSystem, movementSystem, footstepSystem]);
+const sim = new Sim([
+  healthSystem,
+  playerInputSystem,
+  playerWeaponSystem,
+  guardAi,
+  alertSystem,
+  movementSystem,
+  footstepSystem,
+]);
 const stage = createBootStage(root);
 const views = new EntityViewSync(sim.world, stage.scene, { player: playerView, guard: guardView });
+const tracers = new Tracers(sim.events);
+stage.scene.add(tracers.object);
 
 const input = new BrowserInput({ keyTarget: window, view: root });
 const snapshots = new SnapshotTracker();
@@ -68,6 +80,7 @@ function selectLevel(id: string) {
   cameraDefault = level.camera;
   cameraZones = level.cameraZones.map((zn) => ({ ...zn, settings: zn.framing }));
   camera.snap();
+  tracers.clear();
   const grid = sim.grid;
   if (!grid) throw new Error('startLevel did not set a grid');
   return { level, grid };
@@ -75,11 +88,16 @@ function selectLevel(id: string) {
 
 let lastFrame = performance.now();
 
-/** Moves the camera toward the player's interpolated (on-screen) position. */
-function followPlayer(): void {
+/** Seconds since the previous rendered frame (capped, so a stall doesn't jump effects). */
+function frameDelta(): number {
   const now = performance.now();
   const dt = Math.min(0.1, (now - lastFrame) / 1000);
   lastFrame = now;
+  return dt;
+}
+
+/** Moves the camera toward the player's interpolated (on-screen) position. */
+function followPlayer(dt: number): void {
   if (!camera.enabled) return; // dev free camera owns the view
   const player = sim.world.with('player', 'transform').first;
   const view = player && views.viewOf(player);
@@ -103,7 +121,9 @@ const loop = new GameLoop(
   (alpha) => {
     views.sync(alpha);
     levelView?.update(performance.now() / 1000);
-    followPlayer();
+    const dt = frameDelta();
+    tracers.update(dt);
+    followPlayer(dt);
     dev?.beforeRender();
     stage.render();
   },
