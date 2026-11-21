@@ -98,5 +98,7 @@ export const guardView: ViewFactory = () => {
   const nose = block(0.2, 0.2, 0.3, 0xe93d1d, 0xffffff);
   nose.position.set(0, 1.35, -0.4);
   g.add(nose);
-  return g;
+  return withUpdate(g, (e) => {
+    g.rotation.x = e.dead ? -Math.PI / 2 : 0; // fallen over
+  });
 };

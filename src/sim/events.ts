@@ -23,6 +23,8 @@ export type SimEvent =
   | { type: 'kill'; target: number; source?: number }
   | { type: 'ko'; target: number; source?: number }
   | { type: 'playerDied' }
+  /** A hitscan shot, for tracers and muzzle flashes. */
+  | { type: 'shot'; from: Vec2; to: Vec2; hit: boolean; source?: number }
   | { type: 'pickup'; entity: number; item: string }
   | { type: 'itemUsed'; item: string }
   | { type: 'ammoUsed'; weapon: string; amount: number };

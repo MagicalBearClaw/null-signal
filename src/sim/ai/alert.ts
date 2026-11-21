@@ -90,7 +90,7 @@ export const alertSystem: System = {
   update({ world, squad, events }, dt) {
     let spotted = false;
     let investigating = false;
-    for (const g of world.with('ai')) {
+    for (const g of world.with('ai').without('dead')) {
       spotted ||= g.ai.blackboard.facts.seesPlayer;
       investigating ||= g.ai.state === 'investigate';
     }

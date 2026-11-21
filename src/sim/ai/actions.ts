@@ -1,7 +1,9 @@
+import { fire } from '../combat/fire';
 import type { Vec2 } from '../events';
 import type { Grid } from '../grid/grid';
 import { stanceMask } from '../grid/tiles';
 import type { PatrolMode } from '../level/model';
+import { wrapAngle } from '../math';
 import { turnToward, yawOf } from '../systems/playerInput';
 import { findPath, type PathBox } from './pathfinding';
 import { GUARD } from './tuning';
@@ -214,16 +216,32 @@ const chase: Action = {
   interrupt: stop,
 };
 
-/** Stands and faces the player while in range. Firing arrives with guard combat (MIC-79). */
+/**
+ * Stands, turns to the player and fires once aimed: after a short reaction delay, then
+ * every `GUARD.combat.interval`. Aim error grows with distance, so far shots often miss.
+ */
 const shoot: Action = {
   name: 'shoot',
   preconditions: { seesPlayer: true, playerInRange: true },
   effects: {},
-  start: stop,
-  tick(agent, _ctx, dt) {
+  start(agent) {
+    stop(agent);
+    agent.ai.memory.cooldown = GUARD.combat.reaction;
+  },
+  tick(agent, ctx, dt) {
     const target = agent.ai.blackboard.playerSeenAt;
     if (!target) return 'failed';
     face(agent, target, dt);
+    const m = agent.ai.memory;
+    m.cooldown = Math.max(0, (m.cooldown ?? 0) - dt);
+    const t = agent.transform;
+    const toTarget = yawOf(target.x - t.x, target.z - t.z);
+    if (m.cooldown === 0 && Math.abs(wrapAngle(toTarget - t.yaw)) <= GUARD.combat.aimTolerance) {
+      const distance = Math.hypot(target.x - t.x, target.z - t.z);
+      const spread = GUARD.combat.spread.base + GUARD.combat.spread.perTile * distance;
+      fire(ctx, agent, toTarget + ctx.rng.signed() * spread, GUARD.combat);
+      m.cooldown = GUARD.combat.interval;
+    }
     return 'running';
   },
   interrupt: noop,
