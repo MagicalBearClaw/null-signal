@@ -2,6 +2,7 @@ import { GUARD } from '../ai/tuning';
 import { createAiState } from '../ai/types';
 import { createHealth } from '../combat/health';
 import { transform, type Collider } from '../components';
+import { CAMERA, createCamera } from '../hazards/camera';
 import { PLAYER } from '../player/tuning';
 import type { Sim } from '../sim';
 import { createGrid, type Level } from './model';
@@ -16,7 +17,7 @@ export const GUARD_COLLIDER: Collider = { halfWidth: 0.3, halfDepth: 0.3, height
 
 /**
  * Replaces whatever the sim holds with a fresh run of `level`: new collision grid,
- * player at the spawn, one entity per guard. Other placements (cameras, doors, ...)
+ * player at the spawn, one entity per guard and camera. Other placements (doors, ...)
  * get entities as their systems are built.
  */
 export function startLevel(sim: Sim, level: Level): void {
@@ -45,6 +46,17 @@ export function startLevel(sim: Sim, level: Level): void {
       vision: { fov: GUARD.vision.fov, range: GUARD.vision.range },
       health: createHealth(GUARD.health),
       ai: createAiState(g.patrol, { x: g.x, z: g.z, yaw: g.yaw }, g.patrolStyle),
+    });
+  }
+
+  for (const c of level.cameras) {
+    sim.world.add({
+      transform: transform(c.x, c.z, c.yaw),
+      collider: { ...CAMERA.collider },
+      renderable: { kind: 'camera' },
+      vision: { fov: CAMERA.fov, range: c.range },
+      health: createHealth(CAMERA.health),
+      camera: createCamera(c.yaw, c.sweep, c.pause),
     });
   }
 }

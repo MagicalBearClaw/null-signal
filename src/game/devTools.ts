@@ -91,6 +91,17 @@ export function installDevTools(host: DevToolsHost): DevTools {
     if (player) applyDamage(sim.world, sim.events, player, Math.min(amount, player.health.current));
   }
 
+  // Hazards: knock every camera out for a while (stands in for chaff until M3).
+  const hz = gui.addFolder('Hazards');
+  hz.add(
+    {
+      jam: () => {
+        for (const c of sim.world.with('camera')) c.camera.disabledFor = 10;
+      },
+    },
+    'jam',
+  ).name('disable cameras 10 s');
+
   function levelLoaded(level: Level, grid: Grid): void {
     settings.level = level.name;
     draw.setLevel(level, grid);

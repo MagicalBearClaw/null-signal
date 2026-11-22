@@ -23,6 +23,10 @@ describe('startLevel', () => {
     expect(player?.transform).toMatchObject({ x: 1.5, z: 1.5, yaw: level.spawn.yaw });
     expect(player && 'collider' in player && player.collider).toEqual(PLAYER_COLLIDER);
     expect(sim.world.with('guard').size).toBe(level.guards.length);
+    const cams = sim.world.with('camera', 'transform', 'vision').entities;
+    expect(cams).toHaveLength(level.cameras.length);
+    expect(cams[0]?.vision.range).toBe(level.cameras[0]?.range);
+    expect(cams[0]?.camera.sweep).toBe(level.cameras[0]?.sweep);
   });
 
   it('replaces the previous run entirely', () => {

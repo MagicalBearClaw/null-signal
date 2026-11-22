@@ -6,7 +6,7 @@ import type { System } from '../sim';
  *
  *   Normal → Suspicious → Alert → Evasion → Caution → Normal
  *
- * - Any guard spotting the player jumps straight to Alert from any state. Each entry
+ * - Any guard or camera spotting the player jumps straight to Alert from any state. Each entry
  *   into Alert is counted for the rating.
  * - Suspicious: something is being investigated. Times out back to Normal.
  * - Alert holds while anyone sees the player and drops to Evasion once nobody has seen
@@ -82,7 +82,7 @@ export function stepAlert(m: AlertMachine, input: AlertInputs, dt: number): Aler
 }
 
 /**
- * Runs the alert machine once per tick after the guards have sensed and decided. Writes
+ * Runs the alert machine once per tick after the guards and cameras have sensed. Writes
  * the state into the squad blackboard (guards react next tick) and emits `alertChanged`.
  */
 export const alertSystem: System = {
@@ -94,6 +94,7 @@ export const alertSystem: System = {
       spotted ||= g.ai.blackboard.facts.seesPlayer;
       investigating ||= g.ai.state === 'investigate';
     }
+    for (const c of world.with('camera').without('dead')) spotted ||= c.camera.sees;
     const from = stepAlert(squad.machine, { spotted, investigating }, dt);
     squad.alert = squad.machine.state;
     if (from) events.emit({ type: 'alertChanged', from, to: squad.machine.state });

@@ -106,6 +106,11 @@
           "value": 90
         },
         {
+          "name": "pause",
+          "type": "float",
+          "value": 1.5
+        },
+        {
           "name": "range",
           "type": "float",
           "value": 6
@@ -131,6 +136,11 @@
           "name": "sweep",
           "type": "float",
           "value": 90
+        },
+        {
+          "name": "pause",
+          "type": "float",
+          "value": 1.5
         },
         {
           "name": "range",
