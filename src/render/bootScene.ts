@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type { CameraPose } from './camera/cameraController';
+import { CAMERA } from '../sim/hazards/camera';
 import { withUpdate, type ViewFactory } from './entityViews';
 
 export interface Stage {
@@ -100,5 +101,39 @@ export const guardView: ViewFactory = () => {
   g.add(nose);
   return withUpdate(g, (e) => {
     g.rotation.x = e.dead ? -Math.PI / 2 : 0; // fallen over
+  });
+};
+
+/**
+ * Surveillance camera: wall bracket and a housing with a lens facing -Z at yaw 0. The
+ * status lamp is amber while watching, red once it sees the player and off when
+ * disabled; a destroyed camera droops on its bracket.
+ */
+export const cameraView: ViewFactory = () => {
+  const root = new THREE.Group();
+  const arm = block(0.08, 0.08, 0.3, 0x2a2f33, 0x6b7780);
+  arm.position.set(0, CAMERA.mountHeight - 0.04, 0.15);
+  root.add(arm);
+  const head = new THREE.Group();
+  head.position.set(0, CAMERA.mountHeight, 0);
+  const housing = block(0.22, 0.2, 0.42, 0xd6d9dc, 0x6b7780);
+  housing.position.y = -0.1;
+  head.add(housing);
+  const lens = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.07, 0.07, 0.06, 16).rotateX(Math.PI / 2),
+    new THREE.MeshBasicMaterial({ color: 0x101418 }),
+  );
+  lens.position.set(0, 0, -0.23);
+  head.add(lens);
+  const lampMat = new THREE.MeshBasicMaterial({ color: 0xffb020 });
+  const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 6), lampMat);
+  lamp.position.set(0.07, 0.03, -0.2);
+  head.add(lamp);
+  root.add(head);
+  return withUpdate(root, (e) => {
+    const cam = e.camera;
+    head.rotation.x = e.dead ? -0.9 : -0.25; // tilted down at the floor; slumps when shot out
+    const lit = cam && !e.dead && cam.disabledFor === 0;
+    lampMat.color.setHex(!lit ? 0x202020 : cam.sees ? 0xff2a1a : 0xffb020);
   });
 };

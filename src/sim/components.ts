@@ -1,5 +1,6 @@
 import type { AiState } from './ai/types';
 import type { VisionCone } from './ai/vision';
+import type { SurveillanceCamera } from './hazards/camera';
 import type { Stance } from './grid/tiles';
 
 /**
@@ -83,6 +84,8 @@ export interface Entity {
   vision?: VisionCone;
   /** Guard brain: blackboard, decision state and action memory (src/sim/ai). */
   ai?: AiState;
+  /** Surveillance camera head: sweep and detection state (src/sim/hazards/camera.ts). */
+  camera?: SurveillanceCamera;
 
   // ── Tags (presence-only) ──────────────────────────────
   player?: true;

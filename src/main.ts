@@ -4,7 +4,7 @@ import { BrowserInput } from './game/input/browserInput';
 import { mapInput, SnapshotTracker } from './game/input/mapping';
 import { GameLoop } from './game/gameLoop';
 import { LEVELS } from './game/levels';
-import { createBootStage, guardView, playerView } from './render/bootScene';
+import { cameraView, createBootStage, guardView, playerView } from './render/bootScene';
 import {
   CAMERA_TUNING,
   CameraController,
@@ -18,6 +18,7 @@ import { createLevelView, type LevelView } from './render/levelView';
 import { Tracers } from './render/tracers';
 import { GUARD_ACTIONS } from './sim/ai/actions';
 import { alertSystem } from './sim/ai/alert';
+import { cameraSystem } from './sim/hazards/camera';
 import { createAiSystem } from './sim/ai/aiSystem';
 import { createGuardBrain } from './sim/ai/guardBrain';
 import { createVisionSensor } from './sim/ai/visionSensor';
@@ -43,12 +44,17 @@ const sim = new Sim([
   playerInputSystem,
   playerWeaponSystem,
   guardAi,
+  cameraSystem,
   alertSystem,
   movementSystem,
   footstepSystem,
 ]);
 const stage = createBootStage(root);
-const views = new EntityViewSync(sim.world, stage.scene, { player: playerView, guard: guardView });
+const views = new EntityViewSync(sim.world, stage.scene, {
+  player: playerView,
+  guard: guardView,
+  camera: cameraView,
+});
 const tracers = new Tracers(sim.events);
 stage.scene.add(tracers.object);
 

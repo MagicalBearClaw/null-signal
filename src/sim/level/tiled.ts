@@ -161,6 +161,7 @@ const SweeperProps = (range: number) =>
   FacingProps.extend({
     sweep: z.number().min(0).max(360).default(90),
     range: z.number().positive().default(range),
+    pause: z.number().nonnegative().default(1.5),
   });
 const LaserProps = z.object({
   mode: z.enum(['alarm', 'damage']).default('alarm'),
@@ -339,6 +340,7 @@ export function loadLevel(
           yaw: facingToYaw(p.facing),
           sweep: (p.sweep * Math.PI) / 180,
           range: p.range,
+          pause: p.pause,
         };
         (kind === 'camera' ? cameras : turrets).push(def);
         break;

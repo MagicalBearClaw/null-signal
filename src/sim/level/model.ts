@@ -72,6 +72,8 @@ export interface SweeperDef extends Placement {
   readonly sweep: number;
   /** Detection / firing range in tiles. */
   readonly range: number;
+  /** Seconds the head holds at each end of the sweep. */
+  readonly pause: number;
 }
 
 export type LaserMode = 'alarm' | 'damage';

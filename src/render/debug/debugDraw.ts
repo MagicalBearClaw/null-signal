@@ -8,11 +8,10 @@ import { disposeObject, gridLines } from '../levelView';
 import { visionFan } from './visionFan';
 
 /**
- * Placeholder camera/turret cone angles, shown by the overlay only, until the camera and
- * turret systems (MIC-80) give those entities a `vision` component. Guards use theirs.
+ * Placeholder turret cone angle, shown by the overlay only, until the turret system gives
+ * turrets a `vision` component. Guards and cameras draw their live cones.
  */
 export const DEBUG_VISION = {
-  camera: { fov: (50 * Math.PI) / 180 },
   turret: { fov: (40 * Math.PI) / 180 },
   rays: 48,
 } as const;
@@ -132,9 +131,7 @@ export class DebugDraw {
       for (const e of world.with('transform', 'vision')) {
         fan(e.transform.x, e.transform.z, e.transform.yaw, e.vision.fov, e.vision.range);
       }
-      // Cameras and turrets: show full coverage (sweep arc plus their own view cone).
-      for (const c of this.level?.cameras ?? [])
-        fan(c.x, c.z, c.yaw, c.sweep + DEBUG_VISION.camera.fov, c.range);
+      // Turrets: full coverage (sweep arc plus view cone) until they get a live cone.
       for (const t of this.level?.turrets ?? [])
         fan(t.x, t.z, t.yaw, t.sweep + DEBUG_VISION.turret.fov, t.range);
     }
