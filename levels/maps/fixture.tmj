@@ -382,7 +382,7 @@
             {
               "name": "item",
               "type": "string",
-              "value": "ration"
+              "value": "medkit"
             }
           ]
         },

@@ -5,7 +5,7 @@ import type { CameraController } from '../render/camera/cameraController';
 import { DebugDraw } from '../render/debug/debugDraw';
 import { applyDamage } from '../sim/combat/health';
 import type { Grid } from '../sim/grid/grid';
-import type { Level } from '../sim/level/model';
+import { KEYCARD_LEVELS, type Level } from '../sim/level/model';
 import type { Sim } from '../sim/sim';
 
 /**
@@ -81,9 +81,19 @@ export function installDevTools(host: DevToolsHost): DevTools {
 
   // Player: damage buttons for testing the death flow before anything can shoot.
   const playerOf = () => sim.world.with('player', 'health').first;
-  const hp = { health: 0 };
+  const hp = { health: 0, keycard: 0 };
   const p = gui.addFolder('Player');
   p.add(hp, 'health').listen().disable();
+  p.add(hp, 'keycard').listen().disable();
+  p.add(
+    {
+      card: () => {
+        const inv = sim.world.with('player', 'inventory').first?.inventory;
+        if (inv) inv.keycard = KEYCARD_LEVELS;
+      },
+    },
+    'card',
+  ).name('give all keycards');
   p.add({ hurt: () => hurt(25) }, 'hurt').name('take 25 damage');
   p.add({ kill: () => hurt(Infinity) }, 'kill').name('kill player');
   function hurt(amount: number): void {
@@ -123,6 +133,7 @@ export function installDevTools(host: DevToolsHost): DevTools {
         stats.fps = Math.round((frames * 1000) / (now - windowStart));
         stats.entities = sim.world.size;
         hp.health = playerOf()?.health.current ?? 0;
+        hp.keycard = playerOf()?.inventory?.keycard ?? 0;
         frames = 0;
         windowStart = now;
       }

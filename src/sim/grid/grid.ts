@@ -59,6 +59,15 @@ export class Grid {
     this.tiles[tz * this.width + tx] = tile;
   }
 
+  /**
+   * The same tiles under different rules. The view shares this grid's tiles, so later
+   * `set` calls on either show up in both.
+   */
+  withRules(rules: Readonly<Record<Tile, BlockMask>>): Grid {
+    const view = Object.create(Grid.prototype) as Grid;
+    return Object.assign(view, { width: this.width, depth: this.depth, tiles: this.tiles, rules });
+  }
+
   /** True when the tile blocks any channel in `mask`. */
   blocks(tx: number, tz: number, mask: BlockMask): boolean {
     return (this.rules[this.tileAt(tx, tz)] & mask) !== 0;

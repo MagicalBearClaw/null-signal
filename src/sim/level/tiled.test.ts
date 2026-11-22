@@ -112,7 +112,7 @@ describe('loadLevel: fixture map', () => {
     expect(level.doors).toEqual([{ id: 8, tileX: 4, tileZ: 4, keycard: 1 }]);
     expect(level.pickups).toEqual([
       { id: 9, x: 8.5, z: 3.5, item: 'keycard', amount: 1 },
-      { id: 10, x: 1.5, z: 3.5, item: 'ration', amount: 1 },
+      { id: 10, x: 1.5, z: 3.5, item: 'medkit', amount: 1 },
     ]);
     expect(level.switches).toEqual([{ id: 11, x: 1.5, z: 5.5, target: 7 }]);
   });
@@ -214,6 +214,15 @@ describe('loadLevel: validation', () => {
     const issues = issuesOf(m);
     expect(issues).toContain('door #8: sits on tile (1, 4), which is not a door tile');
     expect(issues).toContain('door tile (4, 4) has 0 door objects, expected 1');
+  });
+
+  it('limits keycards to levels 1–5, on pickups and doors', () => {
+    const m = fixture();
+    objectById(m, 9).properties[1].value = 6;
+    objectById(m, 8).properties[0].value = 7;
+    const text = issuesOf(m).join('\n');
+    expect(text).toMatch(/pickup #9: keycard level \(amount\) must be 1–5, got 6/);
+    expect(text).toMatch(/door #8 keycard: Too big/);
   });
 
   it('rejects objects outside the map and malformed shapes', () => {

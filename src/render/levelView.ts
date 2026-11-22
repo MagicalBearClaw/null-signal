@@ -3,6 +3,16 @@ import { TILES, type Tile } from '../sim/grid/tiles';
 import type { Level } from '../sim/level/model';
 import { createTheme, type Theme } from './themes/theme';
 
+/** A door's tile and how far open it is (0..1), as the sim's door component has them. */
+export interface DoorPose {
+  readonly tileX: number;
+  readonly tileZ: number;
+  readonly openness: number;
+}
+
+/** How tall an open door still stands, as a fraction of its closed height. */
+const OPEN_DOOR_SCALE = 0.03;
+
 /** The parts of a level the view needs. */
 export type LevelLayout = Pick<Level, 'width' | 'depth' | 'tiles' | 'theme'>;
 
@@ -11,6 +21,8 @@ export interface LevelView {
   readonly theme: Theme;
   /** Animates the theme. `time` is in seconds. */
   update(time: number): void;
+  /** Poses each door for how far open it is (open doors sink into the floor). */
+  syncDoors(doors: Iterable<DoorPose>): void;
   /** Frees everything the view and its theme created and detaches the root. */
   dispose(): void;
 }
@@ -33,6 +45,8 @@ export function createLevelView(level: LevelLayout, theme: Theme = createTheme(l
   });
 
   const m = new THREE.Matrix4();
+  let doorMesh: THREE.InstancedMesh | null = null;
+  const doorInstance = new Map<number, number>(); // tile index → instance
   for (const kind of TILES) {
     const indices = byKind.get(kind);
     const look = indices && theme.tile(kind);
@@ -46,6 +60,10 @@ export function createLevelView(level: LevelLayout, theme: Theme = createTheme(l
     });
     mesh.computeBoundingSphere();
     mesh.name = kind;
+    if (kind === 'door') {
+      doorMesh = mesh;
+      indices.forEach((idx, n) => doorInstance.set(idx, n));
+    }
     root.add(mesh);
   }
 
@@ -53,6 +71,17 @@ export function createLevelView(level: LevelLayout, theme: Theme = createTheme(l
     root,
     theme,
     update: (time) => theme.update(time),
+    syncDoors(doors) {
+      if (!doorMesh) return;
+      for (const d of doors) {
+        const n = doorInstance.get(d.tileZ * level.width + d.tileX);
+        if (n === undefined) continue;
+        const sy = 1 - (1 - OPEN_DOOR_SCALE) * d.openness;
+        m.makeScale(1, sy, 1).setPosition(d.tileX + 0.5, 0, d.tileZ + 0.5);
+        doorMesh.setMatrixAt(n, m);
+      }
+      doorMesh.instanceMatrix.needsUpdate = true;
+    },
     dispose() {
       // Geometry and materials belong to the theme; instanced meshes only own their matrices.
       root.traverse((o) => {

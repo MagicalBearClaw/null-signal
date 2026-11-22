@@ -2,8 +2,10 @@ import { z } from 'zod';
 import type { Vec2 } from '../events';
 import { TILES, type Tile } from '../grid/tiles';
 import { wrapAngle } from '../math';
+import { KEYCARD_ITEM } from '../items/pickups';
 import {
   DEFAULT_PATROL_STYLE,
+  KEYCARD_LEVELS,
   OBJECTIVE_TYPES,
   PATROL_MODES,
   THEMES,
@@ -168,7 +170,7 @@ const LaserProps = z.object({
   onSeconds: z.number().nonnegative().default(0),
   offSeconds: z.number().nonnegative().default(0),
 });
-const DoorProps = z.object({ keycard: z.number().int().nonnegative().default(0) });
+const DoorProps = z.object({ keycard: z.number().int().min(0).max(KEYCARD_LEVELS).default(0) });
 const PickupProps = z.object({ item: z.string().min(1), amount: z.number().int().positive().default(1) });
 const SwitchProps = z.object({ target: objectRef });
 const CameraZoneProps = z.object({
@@ -372,7 +374,12 @@ export function loadLevel(
       case 'pickup': {
         const p = parseProps(PickupProps, o, ctx);
         const at = position(o, ctx);
-        if (p && at) pickups.push({ id: o.id, ...at, ...p });
+        if (!p || !at) break;
+        if (p.item === KEYCARD_ITEM && p.amount > KEYCARD_LEVELS) {
+          issues.push(`${where}: keycard level (amount) must be 1–${KEYCARD_LEVELS}, got ${p.amount}`);
+          break;
+        }
+        pickups.push({ id: o.id, ...at, ...p });
         break;
       }
       case 'switch': {

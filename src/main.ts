@@ -4,7 +4,7 @@ import { BrowserInput } from './game/input/browserInput';
 import { mapInput, SnapshotTracker } from './game/input/mapping';
 import { GameLoop } from './game/gameLoop';
 import { LEVELS } from './game/levels';
-import { cameraView, createBootStage, guardView, playerView } from './render/bootScene';
+import { cameraView, createBootStage, guardView, pickupView, playerView } from './render/bootScene';
 import {
   CAMERA_TUNING,
   CameraController,
@@ -19,6 +19,8 @@ import { Tracers } from './render/tracers';
 import { GUARD_ACTIONS } from './sim/ai/actions';
 import { alertSystem } from './sim/ai/alert';
 import { cameraSystem } from './sim/hazards/camera';
+import { doorSystem } from './sim/hazards/doors';
+import { pickupSystem } from './sim/items/pickups';
 import { createAiSystem } from './sim/ai/aiSystem';
 import { createGuardBrain } from './sim/ai/guardBrain';
 import { createVisionSensor } from './sim/ai/visionSensor';
@@ -47,6 +49,8 @@ const sim = new Sim([
   cameraSystem,
   alertSystem,
   movementSystem,
+  doorSystem,
+  pickupSystem,
   footstepSystem,
 ]);
 const stage = createBootStage(root);
@@ -54,6 +58,7 @@ const views = new EntityViewSync(sim.world, stage.scene, {
   player: playerView,
   guard: guardView,
   camera: cameraView,
+  pickup: pickupView,
 });
 const tracers = new Tracers(sim.events);
 stage.scene.add(tracers.object);
@@ -102,6 +107,10 @@ function frameDelta(): number {
   return dt;
 }
 
+function* doorPoses() {
+  for (const e of sim.world.with('door')) yield e.door;
+}
+
 /** Moves the camera toward the player's interpolated (on-screen) position. */
 function followPlayer(dt: number): void {
   if (!camera.enabled) return; // dev free camera owns the view
@@ -127,6 +136,7 @@ const loop = new GameLoop(
   (alpha) => {
     views.sync(alpha);
     levelView?.update(performance.now() / 1000);
+    levelView?.syncDoors(doorPoses());
     const dt = frameDelta();
     tracers.update(dt);
     followPlayer(dt);

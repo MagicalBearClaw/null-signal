@@ -88,6 +88,9 @@ export interface LaserDef {
   readonly offSeconds: number;
 }
 
+/** Keycards come in levels 1 to this. */
+export const KEYCARD_LEVELS = 5;
+
 export interface DoorDef {
   readonly id: number;
   readonly tileX: number;
