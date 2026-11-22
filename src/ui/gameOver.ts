@@ -1,6 +1,9 @@
 /**
  * Game Over overlay (DESIGN.md §4.2): shown over the frozen level when the player dies.
  * Continue restarts the level (counted); Exit leaves it. Plain DOM over the canvas.
+ *
+ * The same panel announces a cleared level (`showCleared`) until the results screen
+ * (MIC-87) takes over: Replay restarts the level, Exit leaves it.
  */
 
 export interface GameOverActions {
@@ -11,6 +14,8 @@ export interface GameOverActions {
 export interface GameOverOverlay {
   /** Shows the overlay; `continues` is how many times this level has been continued so far. */
   show(continues: number): void;
+  /** Shows the level-cleared variant. Its first button calls `onContinue` too. */
+  showCleared(): void;
   hide(): void;
   readonly visible: boolean;
   dispose(): void;
@@ -39,6 +44,12 @@ const STYLE = `
 .ns-gameover button:hover, .ns-gameover button:focus-visible {
   outline: none; background: #1de9b6; color: #021210; box-shadow: 0 0 18px #1de9b6;
 }
+.ns-gameover.cleared {
+  color: #1de9b6;
+  background: radial-gradient(ellipse at center, rgba(2, 40, 32, 0.55), rgba(2, 4, 4, 0.9));
+}
+.ns-gameover.cleared h1 { text-shadow: 0 0 12px #1de9b6, 0 0 32px rgba(29, 233, 182, 0.6); }
+.ns-gameover.cleared p { color: #6fbfa9; }
 @keyframes ns-gameover-in { from { opacity: 0; } to { opacity: 1; } }
 `;
 
@@ -64,7 +75,18 @@ export function createGameOverOverlay(root: HTMLElement, actions: GameOverAction
   const continueBtn = el.querySelector<HTMLButtonElement>('[data-action="continue"]');
   const exitBtn = el.querySelector<HTMLButtonElement>('[data-action="exit"]');
   const continues = el.querySelector<HTMLParagraphElement>('.continues');
-  if (!continueBtn || !exitBtn || !continues) throw new Error('game over markup is incomplete');
+  const title = el.querySelector<HTMLHeadingElement>('h1');
+  if (!continueBtn || !exitBtn || !continues || !title) throw new Error('game over markup is incomplete');
+
+  const open_ = (cleared: boolean, detail: string) => {
+    el.classList.toggle('cleared', cleared);
+    title.textContent = cleared ? 'OBJECTIVE COMPLETE' : 'SIGNAL LOST';
+    continueBtn.textContent = cleared ? 'REPLAY' : 'CONTINUE';
+    continues.textContent = detail;
+    el.classList.add('open');
+    open = true;
+    continueBtn.focus();
+  };
 
   let open = false;
   const close = (then: () => void) => () => {
@@ -85,10 +107,10 @@ export function createGameOverOverlay(root: HTMLElement, actions: GameOverAction
 
   const overlay: GameOverOverlay = {
     show(count) {
-      continues.textContent = count > 0 ? `CONTINUES  ${count}` : '';
-      el.classList.add('open');
-      open = true;
-      continueBtn.focus();
+      open_(false, count > 0 ? `CONTINUES  ${count}` : '');
+    },
+    showCleared() {
+      open_(true, 'SIMULATION CLEARED');
     },
     hide() {
       el.classList.remove('open');

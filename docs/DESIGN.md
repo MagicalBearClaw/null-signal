@@ -93,7 +93,7 @@ Original only: jsfxr-generated or CC0 SFX, synth ambient loops, an original aler
   - Tile layer: grid semantics.
   - Object layers: player spawn, goal, guards with patrol polylines, cameras, turrets, lasers, doors (keycard level), pickups, switches.
   - Map properties: `theme`, `objective`, `objectiveParams`, `parTime`, `rankThresholds`.
-- **Objectives:** a registry of objective types behind one interface (`init`, `onEvent`, `isComplete`, `isFailed`). v1 set: `sneak` (no weapons), `weaponPractice` (one weapon), `eliminateAll`, `timeAttack`, `collectThenExit`. New scenarios are added by registering a type.
+- **Objectives:** a registry of objective types behind one interface (`init`, `onEvent`, `isComplete`, `isFailed`). v1 set: `sneak` (no weapons), `weaponPractice` (one weapon), `eliminateAll`, `timeAttack`, `collectThenExit`. New scenarios are added by registering a type. The registry lives in `src/sim/objectives/registry.ts`; M1 ships `sneak` and `collectThenExit`, and the loader validates each type's params against the map.
 - **v1 content:** 15 levels in 3 tiers of 5.
   - Tier 1 (tutorial): movement and crawl, wall-press and knock, CQC, weapons basics, keycards and cameras.
   - Tier 2: mixed.

@@ -39,7 +39,7 @@ describe('loadLevel: fixture map', () => {
       width: 10,
       depth: 8,
       theme: 'simGrid',
-      objective: { type: 'collectThenExit', params: { items: ['keycard'] } },
+      objective: { type: 'collectThenExit', params: { item: 'keycard' } },
       parTime: 90,
       rankThresholds: { S: 9000, A: 7000, B: 5000, C: 3000 },
     });
@@ -164,6 +164,27 @@ describe('loadLevel: validation', () => {
     const m = fixture();
     m.properties.find((p: { name: string }) => p.name === 'objectiveParams').value = '{not json';
     expect(issuesOf(m).join('\n')).toMatch(/objectiveParams: must be a JSON object/);
+  });
+
+  it('validates the objective type and its params against the registry and the map', () => {
+    const prop = (m: RawMap, name: string) => m.properties.find((p: { name: string }) => p.name === name);
+    let m = fixture();
+    prop(m, 'objective').value = 'dragonHunt';
+    expect(issuesOf(m).join('\n')).toMatch(
+      /objective: unknown type "dragonHunt" \(known: sneak, collectThenExit\)/,
+    );
+
+    m = fixture();
+    prop(m, 'objectiveParams').value = '{"item":"keycard","count":3}';
+    expect(issuesOf(m)).toContain('objective: needs 3 "keycard" pickups, the map has 1');
+
+    m = fixture();
+    prop(m, 'objectiveParams').value = '{"count":1}';
+    expect(issuesOf(m).join('\n')).toMatch(/objectiveParams.item:/);
+
+    m = fixture();
+    m.layers[1].objects = m.layers[1].objects.filter((o: { type: string }) => o.type !== 'goal');
+    expect(issuesOf(m)).toContain('objective: this objective needs at least one goal zone');
   });
 
   it('reports tiles whose gid has no semantic', () => {

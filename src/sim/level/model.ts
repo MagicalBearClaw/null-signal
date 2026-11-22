@@ -13,16 +13,6 @@ import type { Tile } from '../grid/tiles';
 export const THEMES = ['simGrid', 'facility'] as const;
 export type Theme = (typeof THEMES)[number];
 
-/** The v1 objective set (DESIGN.md §5). New scenarios register a new type here. */
-export const OBJECTIVE_TYPES = [
-  'sneak',
-  'weaponPractice',
-  'eliminateAll',
-  'timeAttack',
-  'collectThenExit',
-] as const;
-export type ObjectiveType = (typeof OBJECTIVE_TYPES)[number];
-
 /** Score needed for each rank; anything below C is a D. */
 export interface RankThresholds {
   readonly S: number;
@@ -134,7 +124,8 @@ export interface Level {
   /** Row-major (index = z * width + x), north row first. */
   readonly tiles: readonly Tile[];
   readonly theme: Theme;
-  readonly objective: { readonly type: ObjectiveType; readonly params: Readonly<Record<string, unknown>> };
+  /** Objective type (a key of `OBJECTIVES` in src/sim/objectives/registry.ts) and its parsed params. */
+  readonly objective: { readonly type: string; readonly params: unknown };
   /** Par time in seconds, for the rating. */
   readonly parTime: number;
   readonly rankThresholds: RankThresholds;

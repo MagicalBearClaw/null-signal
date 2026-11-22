@@ -5,6 +5,8 @@ import { transform, type Collider } from '../components';
 import { CAMERA, createCamera } from '../hazards/camera';
 import { createDoor } from '../hazards/doors';
 import { createInventory } from '../items/pickups';
+import { createGoalZone } from '../objectives/objectiveSystem';
+import { createObjective } from '../objectives/registry';
 import { PLAYER } from '../player/tuning';
 import type { Sim } from '../sim';
 import { createGrid, type Level } from './model';
@@ -19,12 +21,13 @@ export const GUARD_COLLIDER: Collider = { halfWidth: 0.3, halfDepth: 0.3, height
 
 /**
  * Replaces whatever the sim holds with a fresh run of `level`: new collision grid,
- * player at the spawn, one entity per guard, camera, door and pickup. Other placements
+ * player at the spawn, the objective, one entity per guard, camera, door, goal and pickup. Other placements
  * get entities as their systems are built.
  */
 export function startLevel(sim: Sim, level: Level): void {
   sim.reset();
   sim.grid = createGrid(level);
+  sim.objective = { objective: createObjective(level.objective, level), status: 'active' };
 
   const { spawn } = level;
   sim.world.add({
@@ -67,6 +70,14 @@ export function startLevel(sim: Sim, level: Level): void {
     sim.world.add({
       transform: transform(d.tileX + 0.5, d.tileZ + 0.5),
       door: createDoor(d.tileX, d.tileZ, d.keycard),
+    });
+  }
+
+  for (const g of level.goals) {
+    sim.world.add({
+      transform: transform(g.x + g.width / 2, g.z + g.depth / 2),
+      goal: createGoalZone(g),
+      renderable: { kind: 'goal' },
     });
   }
 

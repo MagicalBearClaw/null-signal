@@ -4,7 +4,7 @@ import { BrowserInput } from './game/input/browserInput';
 import { mapInput, SnapshotTracker } from './game/input/mapping';
 import { GameLoop } from './game/gameLoop';
 import { LEVELS } from './game/levels';
-import { cameraView, createBootStage, guardView, pickupView, playerView } from './render/bootScene';
+import { cameraView, createBootStage, goalView, guardView, pickupView, playerView } from './render/bootScene';
 import {
   CAMERA_TUNING,
   CameraController,
@@ -21,6 +21,7 @@ import { alertSystem } from './sim/ai/alert';
 import { cameraSystem } from './sim/hazards/camera';
 import { doorSystem } from './sim/hazards/doors';
 import { pickupSystem } from './sim/items/pickups';
+import { objectiveSystem } from './sim/objectives/objectiveSystem';
 import { createAiSystem } from './sim/ai/aiSystem';
 import { createGuardBrain } from './sim/ai/guardBrain';
 import { createVisionSensor } from './sim/ai/visionSensor';
@@ -51,6 +52,7 @@ const sim = new Sim([
   movementSystem,
   doorSystem,
   pickupSystem,
+  objectiveSystem,
   footstepSystem,
 ]);
 const stage = createBootStage(root);
@@ -59,6 +61,7 @@ const views = new EntityViewSync(sim.world, stage.scene, {
   guard: guardView,
   camera: cameraView,
   pickup: pickupView,
+  goal: goalView,
 });
 const tracers = new Tracers(sim.events);
 stage.scene.add(tracers.object);
@@ -146,9 +149,11 @@ const loop = new GameLoop(
 );
 
 // Death: freeze the level and offer Continue (restart, counted) or Exit.
+// A cleared level reuses the panel (Replay / Exit) until the results screen lands.
+let cleared = false;
 const gameOver = createGameOverOverlay(root, {
   onContinue() {
-    continues++;
+    if (!cleared) continues++;
     restart(currentLevelId);
   },
   onExit() {
@@ -166,7 +171,13 @@ function restart(id: string): void {
 }
 sim.events.on('playerDied', () => {
   loop.pause();
+  cleared = false;
   gameOver.show(continues);
+});
+sim.events.on('objectiveComplete', () => {
+  loop.pause();
+  cleared = true;
+  gameOver.showCleared();
 });
 
 // Don't simulate time spent in a background tab, and drop keys held while it was hidden.

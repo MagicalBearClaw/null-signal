@@ -4,6 +4,7 @@ import type { Entity } from './components';
 import { EventBus } from './events';
 import type { Grid } from './grid/grid';
 import { EMPTY_INPUT, type InputSnapshot } from './input';
+import type { ObjectiveRun } from './objectives/objectiveSystem';
 import { Rng } from './rng';
 
 /** Everything a system may touch during a tick. */
@@ -20,6 +21,8 @@ export interface SimContext {
   readonly squad: SquadBlackboard;
   /** Seeded randomness; the only source systems may use. */
   readonly rng: Rng;
+  /** The level's objective and whether it is settled, or null outside a level. */
+  readonly objective: ObjectiveRun | null;
 }
 
 export interface System {
@@ -46,6 +49,8 @@ export class Sim {
   grid: Grid | null = null;
   squad: SquadBlackboard = createSquad();
   rng = new Rng();
+  /** Set by `startLevel`. */
+  objective: ObjectiveRun | null = null;
   private readonly systems: readonly System[];
   private tickCount = 0;
 
@@ -65,6 +70,7 @@ export class Sim {
     this.grid = null;
     this.squad = createSquad();
     this.rng = new Rng();
+    this.objective = null;
   }
 
   get tick(): number {
@@ -96,6 +102,7 @@ export class Sim {
       grid: this.grid,
       squad: this.squad,
       rng: this.rng,
+      objective: this.objective,
     };
     for (const system of this.systems) system.update(ctx, dt);
 
