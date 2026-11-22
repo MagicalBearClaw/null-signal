@@ -168,3 +168,39 @@ export const pickupView: ViewFactory = (e) => {
     item.rotation.y = t * 1.2;
   });
 };
+
+/**
+ * Goal zone: a glowing frame on the floor around the zone with a soft fill. Teal and
+ * pulsing when open, dim red while the objective keeps it locked. The view sits at the
+ * zone's centre, so its geometry is built around the origin.
+ */
+export const goalView: ViewFactory = (e) => {
+  const g = e.goal;
+  const w = g?.width ?? 1;
+  const d = g?.depth ?? 1;
+  const root = new THREE.Group();
+  const fillMat = new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false });
+  const fill = new THREE.Mesh(new THREE.PlaneGeometry(w, d).rotateX(-Math.PI / 2), fillMat);
+  fill.position.y = 0.02;
+  const inset = 0.08;
+  const hw = w / 2 - inset;
+  const hd = d / 2 - inset;
+  const frameGeom = new THREE.BufferGeometry().setFromPoints(
+    [
+      [-hw, -hd],
+      [hw, -hd],
+      [hw, hd],
+      [-hw, hd],
+      [-hw, -hd],
+    ].map(([x, z]) => new THREE.Vector3(x, 0.03, z)),
+  );
+  const frameMat = new THREE.LineBasicMaterial();
+  root.add(fill, new THREE.Line(frameGeom, frameMat));
+  return withUpdate(root, (ent) => {
+    const open = ent.goal?.unlocked ?? false;
+    const pulse = open ? 0.5 + 0.5 * Math.sin(performance.now() / 300) : 0;
+    frameMat.color.setHex(open ? 0x1de9b6 : 0x7a2a1d);
+    fillMat.color.setHex(open ? 0x1de9b6 : 0x3a120c);
+    fillMat.opacity = open ? 0.12 + 0.12 * pulse : 0.15;
+  });
+};

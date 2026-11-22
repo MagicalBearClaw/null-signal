@@ -29,6 +29,10 @@ export type SimEvent =
   | { type: 'pickup'; entity: number; item: string }
   /** A door finished opening (`open`) or started closing. */
   | { type: 'door'; tile: Vec2; open: boolean }
+  /** The player stepped into an unlocked goal zone. */
+  | { type: 'goalReached' }
+  | { type: 'objectiveComplete' }
+  | { type: 'objectiveFailed' }
   | { type: 'itemUsed'; item: string }
   | { type: 'ammoUsed'; weapon: string; amount: number };
 

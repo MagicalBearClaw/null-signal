@@ -26,7 +26,7 @@
     {
       "name": "objectiveParams",
       "type": "string",
-      "value": "{\"items\":[\"keycard\"]}"
+      "value": "{\"item\":\"keycard\"}"
     },
     {
       "name": "parTime",

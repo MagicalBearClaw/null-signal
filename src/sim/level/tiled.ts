@@ -3,10 +3,10 @@ import type { Vec2 } from '../events';
 import { TILES, type Tile } from '../grid/tiles';
 import { wrapAngle } from '../math';
 import { KEYCARD_ITEM } from '../items/pickups';
+import { validateObjective } from '../objectives/registry';
 import {
   DEFAULT_PATROL_STYLE,
   KEYCARD_LEVELS,
-  OBJECTIVE_TYPES,
   PATROL_MODES,
   THEMES,
   type PatrolStyle,
@@ -136,7 +136,7 @@ const json = <T extends z.ZodType>(schema: T) =>
 
 const MapPropsSchema = z.object({
   theme: z.enum(THEMES),
-  objective: z.enum(OBJECTIVE_TYPES),
+  objective: z.string().min(1),
   objectiveParams: json(z.record(z.string(), z.unknown(), { error: 'must be a JSON object' })).default({}),
   parTime: z.number().positive(),
   cameraPitch: z.number().min(20).max(90).default(60),
@@ -250,6 +250,7 @@ export function loadLevel(
 
   // Map properties
   const props = MapPropsSchema.safeParse(propertyBag(map.properties));
+  let objectiveParams: unknown = {};
   if (!props.success) issues.push(...formatIssues('map property', props.error));
 
   // Objects
@@ -423,6 +424,15 @@ export function loadLevel(
     if (n !== 1) issues.push(`door tile (${x}, ${z}) has ${n} door objects, expected 1`);
   });
 
+  if (props.success) {
+    const v = validateObjective(
+      { type: props.data.objective, params: props.data.objectiveParams },
+      { goals, pickups, guards },
+    );
+    if (v.ok) objectiveParams = v.params;
+    else issues.push(...v.issues);
+  }
+
   if (issues.length > 0 || !props.success) throw fail();
   const [spawn] = spawns as [Placement];
   const mp = props.data;
@@ -438,7 +448,7 @@ export function loadLevel(
     depth: map.height,
     tiles,
     theme: mp.theme,
-    objective: { type: mp.objective, params: mp.objectiveParams },
+    objective: { type: mp.objective, params: objectiveParams },
     parTime: mp.parTime,
     rankThresholds: mp.rankThresholds,
     spawn,

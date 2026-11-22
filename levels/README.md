@@ -11,15 +11,26 @@ Levels are authored in [Tiled](https://www.mapeditor.org/) and loaded by `loadLe
 
 ## Map properties
 
-| Property          | Type   | Example                                                                    |
-| ----------------- | ------ | -------------------------------------------------------------------------- |
-| `theme`           | string | `simGrid` or `facility`                                                    |
-| `objective`       | string | `sneak`, `weaponPractice`, `eliminateAll`, `timeAttack`, `collectThenExit` |
-| `objectiveParams` | string | JSON object, e.g. `{"items":["keycard"]}` (optional)                       |
-| `parTime`         | float  | seconds, e.g. `90`                                                         |
-| `rankThresholds`  | string | `{"S":9000,"A":7000,"B":5000,"C":3000}`, strictly descending               |
-| `cameraPitch`     | float  | degrees above the horizon, 20–90 (optional, default 60)                    |
-| `cameraDistance`  | float  | tiles from the player (optional, default 10)                               |
+| Property          | Type   | Example                                                      |
+| ----------------- | ------ | ------------------------------------------------------------ |
+| `theme`           | string | `simGrid` or `facility`                                      |
+| `objective`       | string | `sneak` or `collectThenExit` (see Objectives below)          |
+| `objectiveParams` | string | JSON object, e.g. `{"item":"drive","count":3}` (optional)    |
+| `parTime`         | float  | seconds, e.g. `90`                                           |
+| `rankThresholds`  | string | `{"S":9000,"A":7000,"B":5000,"C":3000}`, strictly descending |
+| `cameraPitch`     | float  | degrees above the horizon, 20–90 (optional, default 60)      |
+| `cameraDistance`  | float  | tiles from the player (optional, default 10)                 |
+
+## Objectives
+
+Every objective finishes when the player steps into a `goal` zone, so each map needs at least one.
+
+| `objective`       | `objectiveParams`                                                                   | Notes                                                     |
+| ----------------- | ----------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| `sneak`           | none                                                                                | Weapons are disabled.                                     |
+| `collectThenExit` | `item` (pickup item to collect), `count` (default: all of them), `label` (HUD name) | The goals stay locked until the player has `count` items. |
+
+New objective types are registered in `src/sim/objectives/registry.ts`. The loader rejects unknown types and params that don't fit the type.
 
 ## Objects
 
