@@ -25,7 +25,10 @@ export type SimEvent =
   | { type: 'playerDied' }
   /** A hitscan shot, for tracers and muzzle flashes. */
   | { type: 'shot'; from: Vec2; to: Vec2; hit: boolean; source?: number }
+  /** `entity` collected an item. */
   | { type: 'pickup'; entity: number; item: string }
+  /** A door finished opening (`open`) or started closing. */
+  | { type: 'door'; tile: Vec2; open: boolean }
   | { type: 'itemUsed'; item: string }
   | { type: 'ammoUsed'; weapon: string; amount: number };
 

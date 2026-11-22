@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import type { CameraPose } from './camera/cameraController';
 import { CAMERA } from '../sim/hazards/camera';
+import { KEYCARD_ITEM } from '../sim/items/pickups';
 import { withUpdate, type ViewFactory } from './entityViews';
 
 export interface Stage {
@@ -135,5 +136,35 @@ export const cameraView: ViewFactory = () => {
     head.rotation.x = e.dead ? -0.9 : -0.25; // tilted down at the floor; slumps when shot out
     const lit = cam && !e.dead && cam.disabledFor === 0;
     lampMat.color.setHex(!lit ? 0x202020 : cam.sees ? 0xff2a1a : 0xffb020);
+  });
+};
+
+/** Keycard colours by level, 1–5: a security-badge palette, darker = higher clearance. */
+const KEYCARD_COLORS = [0x3fa7ff, 0x3fd27a, 0xffc93f, 0xff7a2f, 0xd63a3a] as const;
+
+/**
+ * Item lying in the level: a keycard (a badge in its level colour) or a small supply case.
+ * Floats and turns slowly so it reads as collectable from the overhead camera.
+ */
+export const pickupView: ViewFactory = (e) => {
+  const root = new THREE.Group();
+  const item = new THREE.Group();
+  const p = e.pickup;
+  if (p?.item === KEYCARD_ITEM) {
+    const color = KEYCARD_COLORS[Math.min(KEYCARD_COLORS.length, Math.max(1, p.amount)) - 1] ?? 0xffffff;
+    const card = block(0.34, 0.02, 0.22, color, 0xffffff);
+    const stripe = block(0.34, 0.025, 0.05, 0x101418, 0x101418);
+    stripe.position.z = -0.05;
+    item.add(card, stripe);
+    item.rotation.x = -0.5; // tilted toward the camera
+  } else {
+    item.add(block(0.3, 0.2, 0.22, 0x2f3a33, 0xc8d6cc));
+  }
+  root.add(item);
+  const phase = (e.transform?.x ?? 0) * 1.7 + (e.transform?.z ?? 0); // de-sync neighbours
+  return withUpdate(root, () => {
+    const t = performance.now() / 1000 + phase;
+    item.position.y = 0.35 + Math.sin(t * 2) * 0.06;
+    item.rotation.y = t * 1.2;
   });
 };

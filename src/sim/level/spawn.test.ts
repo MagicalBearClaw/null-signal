@@ -27,6 +27,11 @@ describe('startLevel', () => {
     expect(cams).toHaveLength(level.cameras.length);
     expect(cams[0]?.vision.range).toBe(level.cameras[0]?.range);
     expect(cams[0]?.camera.sweep).toBe(level.cameras[0]?.sweep);
+    expect(sim.world.with('door').entities.map((e) => e.door)).toEqual(
+      level.doors.map((d) => ({ tileX: d.tileX, tileZ: d.tileZ, keycard: d.keycard, openness: 0 })),
+    );
+    expect(sim.world.with('pickup').size).toBe(level.pickups.length);
+    expect(player?.inventory).toEqual({ keycard: 0, items: {} });
   });
 
   it('replaces the previous run entirely', () => {

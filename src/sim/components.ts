@@ -1,6 +1,8 @@
 import type { AiState } from './ai/types';
 import type { VisionCone } from './ai/vision';
 import type { SurveillanceCamera } from './hazards/camera';
+import type { Door } from './hazards/doors';
+import type { Inventory, Pickup } from './items/pickups';
 import type { Stance } from './grid/tiles';
 
 /**
@@ -84,6 +86,12 @@ export interface Entity {
   vision?: VisionCone;
   /** Guard brain: blackboard, decision state and action memory (src/sim/ai). */
   ai?: AiState;
+  /** A door on one tile (src/sim/hazards/doors.ts). */
+  door?: Door;
+  /** An item lying in the level, collected by walking over it. */
+  pickup?: Pickup;
+  /** What the player carries: keycard level and items. */
+  inventory?: Inventory;
   /** Surveillance camera head: sweep and detection state (src/sim/hazards/camera.ts). */
   camera?: SurveillanceCamera;
 

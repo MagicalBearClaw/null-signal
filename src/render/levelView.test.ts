@@ -85,4 +85,23 @@ describe('Sim Grid theme', () => {
     expect(theme.tile('wall')).toBe(theme.tile('wall'));
     theme.dispose();
   });
+
+  it('sinks a door into the floor as it opens', () => {
+    const view = createLevelView(
+      layout(3, 1, (x) => (x === 1 ? 'door' : 'floor')),
+      createSimGridTheme(),
+    );
+    const door = instanced(view.root).find((m) => m.name === 'door');
+    const scaleY = () => {
+      const m = new THREE.Matrix4();
+      door?.getMatrixAt(0, m);
+      return new THREE.Vector3().setFromMatrixScale(m).y;
+    };
+    expect(scaleY()).toBeCloseTo(1);
+    view.syncDoors([{ tileX: 1, tileZ: 0, openness: 1 }]);
+    expect(scaleY()).toBeLessThan(0.05);
+    view.syncDoors([{ tileX: 1, tileZ: 0, openness: 0.5 }]);
+    expect(scaleY()).toBeCloseTo(0.515);
+    view.dispose();
+  });
 });

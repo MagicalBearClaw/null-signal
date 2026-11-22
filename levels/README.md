@@ -25,19 +25,19 @@ Levels are authored in [Tiled](https://www.mapeditor.org/) and loaded by `loadLe
 
 Set the object's **Class** to one of the types below. Angles (`facing`, `sweep`) are in degrees: `facing` is clockwise from north (0 = up, 90 = right). Distances are in tiles.
 
-| Class        | Shape                 | Properties (default)                                                                                                  |
-| ------------ | --------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `spawn`      | point                 | `facing` (0). Exactly one per map.                                                                                    |
-| `goal`       | rectangle             | none                                                                                                                  |
-| `guard`      | point                 | `facing` (0), `patrol` → a `patrol` object (none = stands post)                                                       |
-| `patrol`     | polyline, 2+ points   | `mode` (`loop` / `pingpong`), `wait` (s at each point, 0), `lookAround` (false)                                       |
-| `camera`     | point on a floor tile | `facing` (0), `sweep` (90), `range` (6), `pause` (s at each end, 1.5). Put it on the floor tile in front of its wall. |
-| `turret`     | point                 | `facing` (0), `sweep` (90), `range` (8), `pause` (1.5)                                                                |
-| `laser`      | polyline, 2 points    | `mode` (`alarm` or `damage`), `onSeconds` (0), `offSeconds` (0 = always on)                                           |
-| `door`       | point on a door tile  | `keycard` (0 = no card needed). Every door tile needs exactly one.                                                    |
-| `pickup`     | point                 | `item` (required), `amount` (1)                                                                                       |
-| `switch`     | point                 | `target` → a `door` or `laser` (optional)                                                                             |
-| `cameraZone` | rectangle             | `pitch`, `distance` (default: the map's camera settings). Later zones win where they overlap.                         |
+| Class        | Shape                 | Properties (default)                                                                                                                     |
+| ------------ | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `spawn`      | point                 | `facing` (0). Exactly one per map.                                                                                                       |
+| `goal`       | rectangle             | none                                                                                                                                     |
+| `guard`      | point                 | `facing` (0), `patrol` → a `patrol` object (none = stands post)                                                                          |
+| `patrol`     | polyline, 2+ points   | `mode` (`loop` / `pingpong`), `wait` (s at each point, 0), `lookAround` (false)                                                          |
+| `camera`     | point on a floor tile | `facing` (0), `sweep` (90), `range` (6), `pause` (s at each end, 1.5). Put it on the floor tile in front of its wall.                    |
+| `turret`     | point                 | `facing` (0), `sweep` (90), `range` (8), `pause` (1.5)                                                                                   |
+| `laser`      | polyline, 2 points    | `mode` (`alarm` or `damage`), `onSeconds` (0), `offSeconds` (0 = always on)                                                              |
+| `door`       | point on a door tile  | `keycard` (0 = no card needed, up to 5). Card N opens doors of level N or lower. Opens for any guard. Every door tile needs exactly one. |
+| `pickup`     | point                 | `item` (required), `amount` (1). For `item` = `keycard`, `amount` is the card level, 1–5.                                                |
+| `switch`     | point                 | `target` → a `door` or `laser` (optional)                                                                                                |
+| `cameraZone` | rectangle             | `pitch`, `distance` (default: the map's camera settings). Later zones win where they overlap.                                            |
 
 The loader reports every problem it finds at once, with the object's id and name.
 

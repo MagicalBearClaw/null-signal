@@ -5,6 +5,7 @@ import { stanceMask } from '../grid/tiles';
 import type { PatrolMode } from '../level/model';
 import { wrapAngle } from '../math';
 import { turnToward, yawOf } from '../systems/playerInput';
+import { plannerGrid } from '../hazards/doors';
 import { findPath, type PathBox } from './pathfinding';
 import { GUARD } from './tuning';
 import type { Action, ActionName, ActionStatus, Agent } from './types';
@@ -78,7 +79,9 @@ export function navigateTo(
   if (!goal || Math.hypot(goal.x - target.x, goal.z - target.z) > 0.25) {
     const box = agent.collider ?? DEFAULT_BOX;
     const from = { x: agent.transform.x, z: agent.transform.z };
-    ai.path = (grid && findPath(grid, from, target, stanceMask('stand'), box)) ?? [{ ...target }];
+    // Plan through closed doors: guards open them on the way.
+    const plan = grid && findPath(plannerGrid(grid), from, target, stanceMask('stand'), box);
+    ai.path = plan ?? [{ ...target }];
     ai.pathGoal = { ...target };
   }
   while (ai.path.length > 0) {

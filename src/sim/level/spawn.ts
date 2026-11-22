@@ -3,6 +3,8 @@ import { createAiState } from '../ai/types';
 import { createHealth } from '../combat/health';
 import { transform, type Collider } from '../components';
 import { CAMERA, createCamera } from '../hazards/camera';
+import { createDoor } from '../hazards/doors';
+import { createInventory } from '../items/pickups';
 import { PLAYER } from '../player/tuning';
 import type { Sim } from '../sim';
 import { createGrid, type Level } from './model';
@@ -17,7 +19,7 @@ export const GUARD_COLLIDER: Collider = { halfWidth: 0.3, halfDepth: 0.3, height
 
 /**
  * Replaces whatever the sim holds with a fresh run of `level`: new collision grid,
- * player at the spawn, one entity per guard and camera. Other placements (doors, ...)
+ * player at the spawn, one entity per guard, camera, door and pickup. Other placements
  * get entities as their systems are built.
  */
 export function startLevel(sim: Sim, level: Level): void {
@@ -32,6 +34,7 @@ export function startLevel(sim: Sim, level: Level): void {
     stance: 'stand',
     locomotion: { running: false, travelled: 0 },
     health: { ...createHealth(PLAYER.health.max), invulnerableFor: PLAYER.health.invulnerableFor },
+    inventory: createInventory(),
     renderable: { kind: 'player' },
     player: true,
   });
@@ -57,6 +60,21 @@ export function startLevel(sim: Sim, level: Level): void {
       vision: { fov: CAMERA.fov, range: c.range },
       health: createHealth(CAMERA.health),
       camera: createCamera(c.yaw, c.sweep, c.pause),
+    });
+  }
+
+  for (const d of level.doors) {
+    sim.world.add({
+      transform: transform(d.tileX + 0.5, d.tileZ + 0.5),
+      door: createDoor(d.tileX, d.tileZ, d.keycard),
+    });
+  }
+
+  for (const p of level.pickups) {
+    sim.world.add({
+      transform: transform(p.x, p.z),
+      pickup: { item: p.item, amount: p.amount },
+      renderable: { kind: 'pickup' },
     });
   }
 }
