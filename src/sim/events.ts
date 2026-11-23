@@ -16,6 +16,8 @@ export type NoiseKind = 'footstep' | 'knock' | 'gunfire' | 'explosion' | 'bodyDr
 export type AlertState = 'normal' | 'suspicious' | 'alert' | 'evasion' | 'caution';
 
 export type SimEvent =
+  /** A level run began; `player` is the player's entity id. First event of every run. */
+  | { type: 'levelStarted'; player: number }
   | { type: 'noise'; kind: NoiseKind; at: Vec2; radius: number; source?: number }
   | { type: 'alertChanged'; from: AlertState; to: AlertState }
   | { type: 'spotted'; by: number; target: number }

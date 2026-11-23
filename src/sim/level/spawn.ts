@@ -30,7 +30,7 @@ export function startLevel(sim: Sim, level: Level): void {
   sim.objective = { objective: createObjective(level.objective, level), status: 'active' };
 
   const { spawn } = level;
-  sim.world.add({
+  const player = sim.world.add({
     transform: transform(spawn.x, spawn.z, spawn.yaw),
     velocity: { x: 0, z: 0 },
     collider: { ...PLAYER_COLLIDER },
@@ -41,6 +41,7 @@ export function startLevel(sim: Sim, level: Level): void {
     renderable: { kind: 'player' },
     player: true,
   });
+  sim.events.emit({ type: 'levelStarted', player: sim.world.id(player) ?? -1 });
 
   for (const g of level.guards) {
     sim.world.add({
