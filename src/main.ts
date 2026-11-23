@@ -22,6 +22,7 @@ import { cameraSystem } from './sim/hazards/camera';
 import { doorSystem } from './sim/hazards/doors';
 import { pickupSystem } from './sim/items/pickups';
 import { objectiveSystem } from './sim/objectives/objectiveSystem';
+import { StatsTracker } from './sim/rating/stats';
 import { createAiSystem } from './sim/ai/aiSystem';
 import { createGuardBrain } from './sim/ai/guardBrain';
 import { createVisionSensor } from './sim/ai/visionSensor';
@@ -76,15 +77,16 @@ let cameraZones: CameraZone[] = [];
 let levelView: LevelView | null = null;
 let dev: DevTools | null = null;
 let currentLevelId = '';
-/** Times the current level was continued after a death (for the rating). */
-let continues = 0;
+/** Run stats for the rating; continues carry across restarts within one attempt. */
+const stats = new StatsTracker();
+stats.attach(sim.events);
 
 /** Starts a level by id: fresh sim state, fresh themed geometry, camera snapped to the player. */
 function selectLevel(id: string) {
   const entry = LEVELS.find((l) => l.id === id);
   if (!entry) throw new Error(`Unknown level "${id}"`);
   const level = entry.load();
-  if (id !== currentLevelId) continues = 0;
+  if (id !== currentLevelId) stats.beginAttempt();
   currentLevelId = id;
   startLevel(sim, level);
   levelView?.dispose();
@@ -134,6 +136,7 @@ const loop = new GameLoop(
   (dt) => {
     const t0 = performance.now();
     sim.step(dt, snapshots.next(mapInput(input.sample(), bindings, undefined, CAMERA_TUNING.yaw)));
+    stats.elapse(dt);
     dev?.recordStep(performance.now() - t0);
   },
   (alpha) => {
@@ -153,7 +156,9 @@ const loop = new GameLoop(
 let cleared = false;
 const gameOver = createGameOverOverlay(root, {
   onContinue() {
-    if (!cleared) continues++;
+    if (cleared)
+      stats.beginAttempt(); // replaying a cleared level is a new attempt
+    else stats.continued();
     restart(currentLevelId);
   },
   onExit() {
@@ -172,7 +177,7 @@ function restart(id: string): void {
 sim.events.on('playerDied', () => {
   loop.pause();
   cleared = false;
-  gameOver.show(continues);
+  gameOver.show(stats.stats.continues);
 });
 sim.events.on('objectiveComplete', () => {
   loop.pause();
@@ -192,6 +197,7 @@ document.addEventListener('visibilitychange', () => {
 if (import.meta.env.DEV) {
   void import('./game/devTools').then(({ installDevTools }) => {
     dev = installDevTools({
+      stats,
       sim,
       stage,
       camera,

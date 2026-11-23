@@ -42,7 +42,8 @@ describe('startLevel', () => {
     startLevel(sim, level);
     expect(sim.world.with('player').size).toBe(1);
     expect(sim.world.with('renderable').entities.some((e) => e.renderable.kind === 'stray')).toBe(false);
-    expect(sim.events.flush()).toEqual([]);
+    // only the new run's start survives; the stray event from before is gone
+    expect(sim.events.flush().map((e) => e.type)).toEqual(['levelStarted']);
   });
 
   it('keeps the player inside the walls when walking into them', () => {

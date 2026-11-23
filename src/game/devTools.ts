@@ -6,6 +6,7 @@ import { DebugDraw } from '../render/debug/debugDraw';
 import { applyDamage } from '../sim/combat/health';
 import type { Grid } from '../sim/grid/grid';
 import { KEYCARD_LEVELS, type Level } from '../sim/level/model';
+import type { StatsTracker } from '../sim/rating/stats';
 import type { Sim } from '../sim/sim';
 
 /**
@@ -20,6 +21,7 @@ export interface DevToolsHost {
   readonly sim: Sim;
   readonly stage: Stage;
   readonly camera: CameraController;
+  readonly stats: StatsTracker;
   readonly levelIds: readonly string[];
   readonly currentLevelId: string;
   /** Loads a level by id and returns it with its fresh grid. */
@@ -101,6 +103,12 @@ export function installDevTools(host: DevToolsHost): DevTools {
     if (player) applyDamage(sim.world, sim.events, player, Math.min(amount, player.health.current));
   }
 
+  // Run: the stats the rating will read, live.
+  const run = { ...host.stats.stats };
+  const r = gui.addFolder('Run stats');
+  r.close();
+  for (const key of Object.keys(run) as (keyof typeof run)[]) r.add(run, key).listen().disable();
+
   // Hazards: knock every camera out for a while (stands in for chaff until M3).
   const hz = gui.addFolder('Hazards');
   hz.add(
@@ -134,6 +142,7 @@ export function installDevTools(host: DevToolsHost): DevTools {
         stats.entities = sim.world.size;
         hp.health = playerOf()?.health.current ?? 0;
         hp.keycard = playerOf()?.inventory?.keycard ?? 0;
+        Object.assign(run, host.stats.stats, { time: Math.round(host.stats.stats.time * 10) / 10 });
         frames = 0;
         windowStart = now;
       }
