@@ -1,9 +1,9 @@
 import type { Level } from '../level/model';
+import type { Rank } from './rank';
 import type { RunStats } from './stats';
 import { RATING_WEIGHTS, type RatingWeights } from './weights';
 
-export const RANKS = ['S', 'A', 'B', 'C', 'D'] as const;
-export type Rank = (typeof RANKS)[number];
+export { RANKS, type Rank } from './rank';
 
 /** One row of the results screen: what was measured and what it was worth. */
 export interface BreakdownLine {
