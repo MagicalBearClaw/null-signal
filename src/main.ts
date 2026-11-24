@@ -34,6 +34,7 @@ import { footstepSystem } from './sim/systems/footsteps';
 import { movementSystem } from './sim/systems/movement';
 import { playerInputSystem } from './sim/systems/playerInput';
 import { createGameOverOverlay } from './ui/gameOver';
+import { createHud } from './ui/hud/hud';
 import { createMenus } from './ui/menu/menus';
 import { createUiNavigator } from './ui/navigator';
 import { SaveGame } from './game/save';
@@ -151,6 +152,15 @@ const loop = new GameLoop(
     levelView?.syncDoors(doorPoses());
     const dt = frameDelta();
     tracers.update(dt);
+    hud.setVisible(!menus.visible);
+    hud.update(
+      {
+        health: sim.world.with('player', 'health').first?.health ?? null,
+        alert: sim.squad.machine,
+        objective: sim.objective?.objective.hudText() ?? null,
+      },
+      dt,
+    );
     followPlayer(dt);
     dev?.beforeRender();
     stage.render();
@@ -161,6 +171,8 @@ const loop = new GameLoop(
 // A cleared level reuses the panel (Replay / Exit) until the results screen lands.
 let cleared = false;
 const ui = createUiNavigator();
+const hud = createHud(root);
+sim.events.on('levelStarted', () => hud.levelStarted());
 const gameOver = createGameOverOverlay(
   root,
   {
