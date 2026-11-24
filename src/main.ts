@@ -34,6 +34,10 @@ import { footstepSystem } from './sim/systems/footsteps';
 import { movementSystem } from './sim/systems/movement';
 import { playerInputSystem } from './sim/systems/playerInput';
 import { createGameOverOverlay } from './ui/gameOver';
+import { createMenus } from './ui/menu/menus';
+import { createUiNavigator } from './ui/navigator';
+import { SaveGame } from './game/save';
+import { browserStore } from './game/storage';
 
 const root = document.getElementById('app');
 if (!root) throw new Error('#app element missing from index.html');
@@ -130,7 +134,9 @@ function followPlayer(dt: number): void {
 
 const first = LEVELS[0];
 if (!first) throw new Error('No levels found under levels/maps/');
-selectLevel(first.id);
+const levelIds = LEVELS.map((l) => l.id);
+const store = browserStore();
+const save = new SaveGame(store, levelIds);
 
 const loop = new GameLoop(
   (dt) => {
@@ -154,17 +160,30 @@ const loop = new GameLoop(
 // Death: freeze the level and offer Continue (restart, counted) or Exit.
 // A cleared level reuses the panel (Replay / Exit) until the results screen lands.
 let cleared = false;
-const gameOver = createGameOverOverlay(root, {
-  onContinue() {
-    if (cleared)
-      stats.beginAttempt(); // replaying a cleared level is a new attempt
-    else stats.continued();
-    restart(currentLevelId);
+const ui = createUiNavigator();
+const gameOver = createGameOverOverlay(
+  root,
+  {
+    onContinue() {
+      if (cleared)
+        stats.beginAttempt(); // replaying a cleared level is a new attempt
+      else stats.continued();
+      restart(currentLevelId);
+    },
+    onExit() {
+      menus.show('title');
+    },
   },
-  onExit() {
-    // The main menu arrives with MIC-86; until then Exit starts the first level fresh.
-    currentLevelId = '';
-    restart(first.id);
+  ui,
+);
+const menus = createMenus(root, {
+  save,
+  levelIds,
+  persistent: () => store.persistent,
+  navigator: ui,
+  play(id) {
+    currentLevelId = ''; // a level started from the menus is always a fresh attempt
+    restart(id);
   },
 });
 /** Reloads a level after the overlay closes and lets the sim run again. */
@@ -205,9 +224,10 @@ if (import.meta.env.DEV) {
       currentLevelId: first.id,
       selectLevel,
     });
-    const grid = sim.grid;
-    if (grid) dev.levelLoaded(first.load(), grid);
   });
 }
 
+// Boot into the title screen; the sim waits until a level is chosen.
 loop.start();
+loop.pause();
+menus.show('title');

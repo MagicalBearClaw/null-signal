@@ -6,6 +6,8 @@
  * (MIC-87) takes over: Replay restarts the level, Exit leaves it.
  */
 
+import type { UiNavigator } from './navigator';
+
 export interface GameOverActions {
   onContinue(): void;
   onExit(): void;
@@ -53,7 +55,11 @@ const STYLE = `
 @keyframes ns-gameover-in { from { opacity: 0; } to { opacity: 1; } }
 `;
 
-export function createGameOverOverlay(root: HTMLElement, actions: GameOverActions): GameOverOverlay {
+export function createGameOverOverlay(
+  root: HTMLElement,
+  actions: GameOverActions,
+  navigator: UiNavigator,
+): GameOverOverlay {
   const style = document.createElement('style');
   style.textContent = STYLE;
   document.head.appendChild(style);
@@ -85,6 +91,7 @@ export function createGameOverOverlay(root: HTMLElement, actions: GameOverAction
     continues.textContent = detail;
     el.classList.add('open');
     open = true;
+    release ??= navigator.activate(el);
     continueBtn.focus();
   };
 
@@ -96,14 +103,9 @@ export function createGameOverOverlay(root: HTMLElement, actions: GameOverAction
   };
   continueBtn.addEventListener('click', close(actions.onContinue));
   exitBtn.addEventListener('click', close(actions.onExit));
-  // left/right moves between the two buttons; the game's own keys stay inert while open
-  el.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
-      (document.activeElement === continueBtn ? exitBtn : continueBtn).focus();
-      e.preventDefault();
-    }
-    e.stopPropagation();
-  });
+  // arrows / d-pad move between the buttons (navigator); the game's own keys stay inert
+  el.addEventListener('keydown', (e) => e.stopPropagation());
+  let release: (() => void) | null = null;
 
   const overlay: GameOverOverlay = {
     show(count) {
@@ -115,6 +117,8 @@ export function createGameOverOverlay(root: HTMLElement, actions: GameOverAction
     hide() {
       el.classList.remove('open');
       open = false;
+      release?.();
+      release = null;
     },
     get visible() {
       return open;
