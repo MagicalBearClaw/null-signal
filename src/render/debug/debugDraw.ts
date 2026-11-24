@@ -52,11 +52,11 @@ export class DebugDraw {
     this.root.name = 'debug';
     this.root.renderOrder = 10;
     this.colliderLines = new THREE.LineSegments(
-      new THREE.BufferGeometry(),
+      emptyGeometry(),
       new THREE.LineBasicMaterial({ color: 0xffff00, depthTest: false }),
     );
     this.visionMesh = new THREE.Mesh(
-      new THREE.BufferGeometry(),
+      emptyGeometry(),
       new THREE.MeshBasicMaterial({
         color: 0xff4040,
         transparent: true,
@@ -139,6 +139,13 @@ export class DebugDraw {
   }
 }
 
+/** A geometry with nothing in it yet, bounded so the renderer can cull it without NaNs. */
+function emptyGeometry(): THREE.BufferGeometry {
+  const g = new THREE.BufferGeometry();
+  g.boundingSphere = new THREE.Sphere();
+  return g;
+}
+
 function setPositions(geom: THREE.BufferGeometry, pts: number[]): void {
   const attr = geom.getAttribute('position') as THREE.BufferAttribute | undefined;
   if (attr && attr.array.length >= pts.length) {
@@ -151,7 +158,10 @@ function setPositions(geom: THREE.BufferGeometry, pts: number[]): void {
     geom.setAttribute('position', new THREE.BufferAttribute(buf, 3));
   }
   geom.setDrawRange(0, pts.length / 3);
-  geom.computeBoundingSphere();
+  // Nothing to draw (e.g. no level loaded yet): bounds of an empty buffer are NaN, so
+  // give it an empty sphere, which the renderer culls without recomputing.
+  if (pts.length > 0) geom.computeBoundingSphere();
+  else geom.boundingSphere = new THREE.Sphere();
 }
 
 function buildGridLayer(level: Level): THREE.Group {
