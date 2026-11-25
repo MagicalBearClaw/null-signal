@@ -52,4 +52,12 @@ Set the object's **Class** to one of the types below. Angles (`facing`, `sweep`)
 
 The loader reports every problem it finds at once, with the object's id and name.
 
+## Campaign
+
+`campaign.json` lists the playable levels in order. Only those appear in the menus, unlock in sequence and are saved; any other map (like the fixture) is reachable from the dev tools only. Adding a level means adding its map and its id here.
+
+| #   | Map      | Objective | Notes                                                                                     |
+| --- | -------- | --------- | ----------------------------------------------------------------------------------------- |
+| 1   | `intake` | `sneak`   | Two patrols, a sweeping camera over the keycard, a level-1 door. Vent route for crawling. |
+
 `maps/fixture.tmj` is the unit-test fixture. It uses every object type and every paintable tile (`doorOpen` only appears at runtime).
