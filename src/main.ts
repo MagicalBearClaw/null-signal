@@ -3,7 +3,7 @@ import { DEFAULT_BINDINGS } from './game/input/bindings';
 import { BrowserInput } from './game/input/browserInput';
 import { mapInput, SnapshotTracker } from './game/input/mapping';
 import { GameLoop } from './game/gameLoop';
-import { LEVELS } from './game/levels';
+import { CAMPAIGN, LEVELS } from './game/levels';
 import { cameraView, createBootStage, goalView, guardView, pickupView, playerView } from './render/bootScene';
 import {
   CAMERA_TUNING,
@@ -133,9 +133,9 @@ function followPlayer(dt: number): void {
   stage.applyPose(camera.update({ x, y, z, velocityX: v.x, velocityZ: v.z }, settings, dt));
 }
 
-const first = LEVELS[0];
-if (!first) throw new Error('No levels found under levels/maps/');
-const levelIds = LEVELS.map((l) => l.id);
+const first = CAMPAIGN[0];
+if (!first) throw new Error('levels/campaign.json lists no levels');
+const levelIds = CAMPAIGN.map((l) => l.id);
 const store = browserStore();
 const save = new SaveGame(store, levelIds);
 

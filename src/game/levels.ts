@@ -1,10 +1,12 @@
+import campaign from '../../levels/campaign.json';
 import type { Level } from '../sim/level/model';
 import { loadLevel } from '../sim/level/tiled';
 
 /**
- * Every map under `levels/maps/`, bundled at build time. Each is parsed on first use.
- * Campaign order and unlocks come later (progression ticket); for now the list is
- * alphabetical by file name.
+ * Every map under `levels/maps/`, bundled at build time and parsed on first use.
+ * `LEVELS` is every map (dev tools), sorted by id; `CAMPAIGN` is the playable order from
+ * `levels/campaign.json`, which is what the menus, unlocks and saves use. Maps not in
+ * the campaign (the unit-test fixture) never appear to players.
  */
 
 const maps = import.meta.glob<string>('../../levels/maps/*.tmj', {
@@ -54,3 +56,15 @@ export const LEVELS: readonly LevelEntry[] = Object.entries(maps)
     };
   })
   .sort((a, b) => a.id.localeCompare(b.id));
+
+/** The campaign in play order (`levels/campaign.json`). Throws on an unknown id. */
+export function campaignLevels(order: readonly string[] = campaign.levels): LevelEntry[] {
+  return order.map((id) => {
+    const entry = LEVELS.find((l) => l.id === id);
+    if (!entry)
+      throw new Error(`levels/campaign.json lists "${id}", but levels/maps/${id}.tmj does not exist`);
+    return entry;
+  });
+}
+
+export const CAMPAIGN: readonly LevelEntry[] = campaignLevels();
