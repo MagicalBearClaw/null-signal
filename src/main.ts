@@ -26,6 +26,8 @@ import { StatsTracker } from './sim/rating/stats';
 import { createAiSystem } from './sim/ai/aiSystem';
 import { createGuardBrain } from './sim/ai/guardBrain';
 import { createVisionSensor } from './sim/ai/visionSensor';
+import { createHearingSensor } from './sim/ai/hearing';
+import { knockSystem } from './sim/systems/knock';
 import { healthSystem } from './sim/combat/health';
 import { playerWeaponSystem } from './sim/combat/playerWeapon';
 import { startLevel } from './sim/level/spawn';
@@ -44,7 +46,7 @@ const root = document.getElementById('app');
 if (!root) throw new Error('#app element missing from index.html');
 
 const guardAi = createAiSystem({
-  sensors: [createVisionSensor()],
+  sensors: [createVisionSensor(), createHearingSensor()],
   decision: createGuardBrain(),
   actions: GUARD_ACTIONS,
 });
@@ -52,6 +54,7 @@ const sim = new Sim([
   healthSystem,
   playerInputSystem,
   playerWeaponSystem,
+  knockSystem,
   guardAi,
   cameraSystem,
   alertSystem,

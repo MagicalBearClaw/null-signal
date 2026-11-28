@@ -82,6 +82,8 @@ export interface Entity {
   health?: Health;
   /** Seconds until the entity's weapon can fire again. */
   weaponCooldown?: number;
+  /** Seconds until the player can knock on a wall again. */
+  knockCooldown?: number;
   renderable?: Renderable;
   /** View cone (guards, cameras). See src/sim/ai/vision.ts. */
   vision?: VisionCone;

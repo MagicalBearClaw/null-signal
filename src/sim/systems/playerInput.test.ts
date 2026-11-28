@@ -134,7 +134,7 @@ describe('footstepSystem', () => {
       const fs = footsteps(sim);
       count += fs.length;
       for (const n of fs) {
-        expect(n.radius).toBe(PLAYER.footsteps.radius);
+        expect(n.radius).toBe(PLAYER.footsteps.runRadius);
         expect(n.at.x).toBeCloseTo(p.transform.x);
         expect(n.source).toBe(sim.world.id(p));
       }
@@ -142,14 +142,29 @@ describe('footstepSystem', () => {
     expect(count).toBe(3);
   });
 
-  it('is silent while walking or crouching', () => {
-    const { sim } = setup();
-    let count = 0;
+  it('makes quieter footsteps walking than running', () => {
+    const { sim } = setup(['..........', '..........', '..........']);
+    const radii: number[] = [];
     for (let i = 0; i < 120; i++) {
       sim.step(DT, input({ x: 1, z: 0 }));
-      count += footsteps(sim).length;
+      radii.push(...footsteps(sim).map((n) => n.radius));
     }
-    expect(count).toBe(0);
+    expect(radii.length).toBeGreaterThan(0);
+    expect(new Set(radii)).toEqual(new Set([PLAYER.footsteps.walkRadius]));
+    expect(PLAYER.footsteps.walkRadius).toBeLessThan(PLAYER.footsteps.runRadius);
+  });
+
+  it('is silent while crouching or crawling', () => {
+    for (const stance of ['crouch', 'crawl'] as const) {
+      const { sim, p } = setup(['..........', '..........', '..........']);
+      p.stance = stance;
+      let count = 0;
+      for (let i = 0; i < 120; i++) {
+        sim.step(DT, input({ x: 1, z: 0 }));
+        count += footsteps(sim).length;
+      }
+      expect(count).toBe(0);
+    }
   });
 
   it('makes no noise running into a wall (no distance covered)', () => {
