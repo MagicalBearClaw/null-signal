@@ -31,9 +31,18 @@ export const PLAYER = {
     noiseRadius: 14,
   },
   footsteps: {
-    /** Distance between footstep noises while running. */
+    /** Distance between footstep noises. */
     stride: 1.4,
-    /** How far a running footstep carries. Walking and crouching are silent. */
-    radius: 4,
+    /** How far a footstep carries, in tiles of sound path. Crouching and crawling are silent. */
+    walkRadius: 2,
+    runRadius: 5,
+  },
+  /** Knocking on a wall you face (context action): a lure. */
+  knock: {
+    radius: 6,
+    /** How far past the body's edge the wall may be. */
+    reach: 0.35,
+    /** Seconds between knocks. */
+    cooldown: 0.5,
   },
 } as const;
